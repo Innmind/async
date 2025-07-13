@@ -15,7 +15,9 @@
         "issues": "http://github.com/innmind/async/issues"
     },
     "require": {
-        "php": "~8.2"
+        "php": "~8.2",
+        "innmind/operating-system": "~6.0",
+        "innmind/immutable": "~5.16"
     },
     "autoload": {
         "psr-4": {
