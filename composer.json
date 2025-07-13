@@ -1,0 +1,30 @@
+{
+    "name": "innmind/async",
+    "type": "library",
+    "description": "Async orchestration",
+    "keywords": ["async"],
+    "homepage": "http://github.com/innmind/async",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Baptiste Langlade",
+            "email": "baptiste.langlade@hey.com"
+        }
+    ],
+    "support": {
+        "issues": "http://github.com/innmind/async/issues"
+    },
+    "require": {
+        "php": "~8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Innmind\\Async\\": "src/"
+        }
+    },
+    "require-dev": {
+        "innmind/static-analysis": "^1.2.1",
+        "innmind/black-box": "~6.4",
+        "innmind/coding-standard": "~2.0"
+    }
+}
