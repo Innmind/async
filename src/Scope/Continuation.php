@@ -52,10 +52,13 @@ final class Continuation
     #[\NoDiscard]
     public function schedule(Sequence $tasks): self
     {
-        // Use ->prepend() to let the caller use lazy sequences
+        // Use ->prepend() to let the caller use lazy sequences but snap it to
+        // avoid rescheduling same tasks multiple times
         return new self(
             $this->next,
-            $tasks->prepend($this->tasks),
+            $tasks
+                ->prepend($this->tasks)
+                ->snap(),
             $this->carry,
         );
     }
