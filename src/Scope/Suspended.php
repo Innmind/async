@@ -12,7 +12,7 @@ final class Suspended
     ) {
     }
 
-    public function __invoke(): self|Resumable|Restartable|Wakeable|Terminated
+    public function __invoke(): self|Resumable
     {
     }
 
