@@ -18,11 +18,6 @@ final class Terminated
         return new self($returned);
     }
 
-    public function next(): self
-    {
-        return $this;
-    }
-
     public function returned(): mixed
     {
         return $this->returned;
