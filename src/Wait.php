@@ -21,7 +21,6 @@ final class Wait
         Scope\Suspended $scope,
         Sequence $tasks,
     ): array {
-
     }
 
     public static function new(): self
