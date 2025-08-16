@@ -22,8 +22,8 @@ final class State
      */
     public static function new(
         Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
-        Sequence $tasks = null,
-        Sequence $results = null,
+        ?Sequence $tasks = null,
+        ?Sequence $results = null,
     ): self {
         return new self;
     }
