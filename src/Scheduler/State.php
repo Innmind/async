@@ -17,7 +17,7 @@ use Innmind\Immutable\{
 final class State
 {
     /**
-     * @param Sequence<Task\Suspended|Task\Resumable|Task\Resumable|Task\Terminated> $tasks
+     * @param Sequence<Task\Suspended|Task\Resumable|Task\Resumable> $tasks
      * @param Sequence<mixed> $results
      */
     private function __construct(
@@ -80,7 +80,6 @@ final class State
             ->map(static fn($task) => match (true) {
                 $task instanceof Task\Suspended => $task, // only the wait can advance
                 $task instanceof Task\Resumable => $task->next(),
-                $task instanceof Task\Terminated => $task, // nothing to do
             })
             ->append(
                 $tasks
