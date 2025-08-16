@@ -9,16 +9,22 @@ namespace Innmind\Async\Task;
 final class Terminated
 {
     private function __construct(
+        private mixed $returned,
     ) {
     }
 
-    public function __invoke(): self
+    public static function of(mixed $returned): self
+    {
+        return new self($returned);
+    }
+
+    public function next(): self
     {
         return $this;
     }
 
-    public static function of(): self
+    public function returned(): mixed
     {
-        return new self;
+        return $this->returned;
     }
 }
