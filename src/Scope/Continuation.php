@@ -86,9 +86,11 @@ final class Continuation
      * @template B
      * @template C
      *
-     * @param callable(Sequence<callable>, mixed): A $restart
-     * @param callable(Sequence<callable>, mixed): B $wake
-     * @param callable(Sequence<callable>, mixed): C $terminate
+     * @param pure-callable(Sequence<callable>, mixed): A $restart
+     * @param pure-callable(Sequence<callable>, mixed): B $wake
+     * @param pure-callable(Sequence<callable>, mixed): C $terminate
+     *
+     * @return A|B|C
      */
     #[\NoDiscard]
     public function match(

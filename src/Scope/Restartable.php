@@ -3,21 +3,82 @@ declare(strict_types = 1);
 
 namespace Innmind\Async\Scope;
 
+use Innmind\Async\{
+    Scope,
+    Suspension,
+};
+use Innmind\Immutable\Sequence;
+
 /**
  * Scope call has finished but asked to call it again
  */
 final class Restartable
 {
+    /**
+     * @psalm-mutation-free
+     *
+     * @param Sequence<callable> $tasks
+     */
     private function __construct(
+        private Scope $scope,
+        private Sequence $tasks,
+        private mixed $carry,
     ) {
     }
 
-    public function __invoke(): Suspended|self|Wakeable|Terminated
+    /**
+     * @psalm-pure
+     *
+     * @return pure-callable(Sequence<callable>, mixed): self
+     */
+    public static function of(Scope $scope): callable
     {
+        return static fn(Sequence $tasks, mixed $carry) => new self(
+            $scope,
+            $tasks,
+            $carry,
+        );
     }
 
-    public static function of(): self
+    public function next(): Suspended|self|Wakeable|Terminated
     {
-        return new self;
+        $fiber = $this->scope->new();
+        /** @var ?Suspension */
+        $return = $fiber->start(Continuation::new($this->carry));
+
+        if ($return instanceof Suspension) {
+            return Suspended::of(
+                $this->scope,
+                $fiber,
+                $return,
+            );
+        }
+
+        /** @var Continuation */
+        $continuation = $fiber->getReturn();
+
+        return $continuation->match(
+            self::of($this->scope),
+            Wakeable::of($this->scope),
+            Terminated::of(...),
+        );
+    }
+
+    /**
+     * @psalm-mutation-free
+     *
+     * @return Sequence<callable>
+     */
+    public function tasks(): Sequence
+    {
+        return $this->tasks;
+    }
+
+    /**
+     * @psalm-mutation-free
+     */
+    public function carry(): mixed
+    {
+        return $this->carry;
     }
 }
