@@ -17,7 +17,7 @@
     "require": {
         "php": "~8.2",
         "innmind/operating-system": "~6.0",
-        "innmind/immutable": "~5.16"
+        "innmind/immutable": "~5.18"
     },
     "autoload": {
         "psr-4": {
@@ -26,7 +26,7 @@
     },
     "require-dev": {
         "innmind/static-analysis": "^1.2.1",
-        "innmind/black-box": "~6.4",
+        "innmind/black-box": "~6.5",
         "innmind/coding-standard": "~2.0"
     }
 }
