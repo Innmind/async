@@ -76,6 +76,14 @@ final class Wakeable
         );
     }
 
+    public function terminate(): Terminated
+    {
+        return Terminated::of(
+            $this->tasks->clear(),
+            $this->carry,
+        );
+    }
+
     /**
      * @psalm-mutation-free
      *

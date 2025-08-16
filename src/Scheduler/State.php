@@ -81,9 +81,29 @@ final class State
         );
     }
 
-    public function wait(Wait $wait): self
+    /**
+     * @return array{self, ?Scope\Terminated}
+     */
+    public function wait(Wait $wait): array
     {
-        return $this;
+        if (
+            $this->scope instanceof Scope\Terminated &&
+            $this->tasks->empty()
+        ) {
+            return [$this, $this->scope];
+        }
+
+        if (
+            $this->scope instanceof Scope\Wakeable &&
+            $this->tasks->empty() &&
+            $this->results->empty()
+        ) {
+            return [$this, $this->scope->terminate()];
+        }
+
+        // todo wait
+
+        return [$this, null];
     }
 
     private function async(OperatingSystem $sync): OperatingSystem

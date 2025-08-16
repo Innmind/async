@@ -84,12 +84,4 @@ final class Restartable
     {
         return $this->tasks;
     }
-
-    /**
-     * @psalm-mutation-free
-     */
-    public function carry(): mixed
-    {
-        return $this->carry;
-    }
 }
