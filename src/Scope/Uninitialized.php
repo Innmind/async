@@ -7,6 +7,8 @@ use Innmind\Async\{
     Scope,
     Suspension,
 };
+use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\Immutable\Sequence;
 
 final class Uninitialized
 {
@@ -27,11 +29,16 @@ final class Uninitialized
         return new self($scope, $carry);
     }
 
-    public function next(): Suspended|Restartable|Wakeable|Terminated
+    public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Terminated
     {
         $fiber = $this->scope->new();
         /** @var ?Suspension */
-        $return = $fiber->start(Continuation::new($this->carry));
+        $return = $fiber->start(
+            $this->carry,
+            $async,
+            Continuation::new($this->carry),
+            Sequence::of(), // no results
+        );
 
         if ($return instanceof Suspension) {
             return Suspended::of(

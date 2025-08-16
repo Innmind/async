@@ -7,6 +7,7 @@ use Innmind\Async\{
     Scope,
     Suspension,
 };
+use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
 /**
@@ -40,11 +41,21 @@ final class Restartable
         );
     }
 
-    public function next(): Suspended|self|Wakeable|Terminated
-    {
+    /**
+     * @param Sequence<mixed> $results
+     */
+    public function next(
+        OperatingSystem $async,
+        Sequence $results,
+    ): Suspended|self|Wakeable|Terminated {
         $fiber = $this->scope->new();
         /** @var ?Suspension */
-        $return = $fiber->start(Continuation::new($this->carry));
+        $return = $fiber->start(
+            $this->carry,
+            $async,
+            Continuation::new($this->carry),
+            $results,
+        );
 
         if ($return instanceof Suspension) {
             return Suspended::of(

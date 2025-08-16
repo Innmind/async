@@ -3,6 +3,10 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
+use Innmind\Async\Scope\Continuation;
+use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\Immutable\Sequence;
+
 final class Scope
 {
     /**
@@ -15,6 +19,8 @@ final class Scope
 
     /**
      * @psalm-pure
+     *
+     * @param callable(mixed, OperatingSystem, Continuation, Sequence<mixed>): Continuation $scope
      */
     public static function of(
         callable $scope,
