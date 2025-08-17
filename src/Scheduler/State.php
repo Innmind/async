@@ -9,6 +9,10 @@ use Innmind\Async\{
     Wait,
 };
 use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\HttpTransport\Curl;
+use Innmind\TimeWarp\Halt;
+use Innmind\TimeContinuum\Period;
+use Innmind\IO\IO;
 use Innmind\Immutable\{
     Sequence,
     Predicate\Instance,
@@ -180,7 +184,26 @@ final class State
 
     private function async(OperatingSystem $sync): OperatingSystem
     {
-        // todo
-        return $sync;
+        $halt = Halt\Async::of($sync->clock());
+        $io = IO::async($sync->clock());
+        // todo handle max concurrency + ssl configuration
+        // todo build a native client based on innmind/io to better integrate in
+        // this system.
+        $http = Curl::of(
+            $sync->clock(),
+            $io,
+        )
+            ->heartbeat(
+                Period::millisecond(10), // this is blocking the active task so it needs to be low
+                static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
+            );
+        // todo handle process signals
+
+        return $sync->map(
+            static fn($config) => $config
+                ->haltProcessVia($halt)
+                ->useHttpTransport($http)
+                ->withIO($io),
+        );
     }
 }

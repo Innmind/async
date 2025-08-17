@@ -16,7 +16,7 @@
     },
     "require": {
         "php": "~8.2",
-        "innmind/operating-system": "~6.0",
+        "innmind/operating-system": "~6.1",
         "innmind/immutable": "~5.18",
         "innmind/io": "~3.5",
         "innmind/time-warp": "~4.1"
