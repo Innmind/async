@@ -56,8 +56,14 @@ final class Suspension
         return Resumption::of($next);
     }
 
-    public function watch(): Watch
+    public function fold(?Watch $watch): ? Watch
     {
-        return $this->kind->watch();
+        $self = $this->kind->watch();
+
+        if (\is_null($watch)) {
+            return $self;
+        }
+
+        return $watch->merge($self);
     }
 }

@@ -43,10 +43,7 @@ final class Wait
     public function with(Suspension $suspension): self
     {
         return new self(
-            match ($this->watch) {
-                null => $suspension->watch(),
-                default => $this->watch->merge($suspension->watch()),
-            },
+            $suspension->fold($this->watch),
         );
     }
 }
