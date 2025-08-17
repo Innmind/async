@@ -3,31 +3,50 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
-use Innmind\Immutable\Sequence;
+use Innmind\IO\Internal\{
+    Watch,
+    Watch\Ready,
+};
+use Innmind\Immutable\Attempt;
 
 final class Wait
 {
+    /**
+     * @psalm-mutation-free
+     */
     private function __construct(
+        private ?Watch $watch,
     ) {
     }
 
     /**
-     * @param Sequence<Task\Suspended> $tasks
-     *
-     * @return array{
-     *     Scope\Suspended|Scope\Resumable,
-     *     Sequence<Task\Suspended|Task\Resumable>,
-     * }
+     * @return ?Attempt<Ready>
      */
-    public function __invoke(
-        Scope\Suspended $scope,
-        Sequence $tasks,
-    ): array {
-        return [$scope, $tasks];
+    public function __invoke(): ?Attempt
+    {
+        if (\is_null($this->watch)) {
+            return null;
+        }
+
+        return ($this->watch)();
     }
 
-    public static function new(): self
+    public static function nothing(): self
     {
-        return new self;
+        return new self(null);
+    }
+
+    /**
+     * @psalm-mutation-free
+     */
+    #[\NoDiscard]
+    public function with(Suspension $suspension): self
+    {
+        return new self(
+            match ($this->watch) {
+                null => $suspension->watch(),
+                default => $this->watch->merge($suspension->watch()),
+            },
+        );
     }
 }

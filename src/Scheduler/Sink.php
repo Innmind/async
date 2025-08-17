@@ -54,7 +54,10 @@ final class Sink
         do {
             [$state, $terminated] = $state
                 ->next($this->sync)
-                ->wait(Wait::new());
+                ->wait(
+                    $this->sync->clock(),
+                    Wait::nothing(),
+                );
         } while (\is_null($terminated));
 
         return $terminated->carry();

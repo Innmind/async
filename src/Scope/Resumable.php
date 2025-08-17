@@ -6,6 +6,7 @@ namespace Innmind\Async\Scope;
 use Innmind\Async\{
     Scope,
     Suspension,
+    Resumption,
 };
 
 /**
@@ -20,7 +21,7 @@ final class Resumable
     private function __construct(
         private Scope $scope,
         private \Fiber $fiber,
-        private mixed $result, // todo type
+        private Resumption $resumption,
     ) {
     }
 
@@ -30,9 +31,9 @@ final class Resumable
     public static function of(
         Scope $scope,
         \Fiber $fiber,
-        mixed $result, // todo type
+        Resumption $resumption,
     ): self {
-        return new self($scope, $fiber, $result);
+        return new self($scope, $fiber, $resumption);
     }
 
     /**
@@ -40,7 +41,9 @@ final class Resumable
      */
     public function next(): Suspended|Restartable|Wakeable|Terminated
     {
-        $return = Suspension::of($this->fiber->resume($this->result));
+        $return = Suspension::of($this->fiber->resume(
+            $this->resumption->unwrap(),
+        ));
 
         if ($return instanceof Suspension) {
             return Suspended::of(

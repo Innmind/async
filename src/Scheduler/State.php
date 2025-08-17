@@ -9,6 +9,7 @@ use Innmind\Async\{
     Wait,
 };
 use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\TimeContinuum\Clock;
 use Innmind\Immutable\{
     Sequence,
     Predicate\Instance,
@@ -21,7 +22,7 @@ final class State
 {
     /**
      * @param Scope\Uninitialized<C>|Scope\Suspended<C>|Scope\Resumable<C>|Scope\Restartable<C>|Scope\Wakeable<C>|Scope\Terminated<C> $scope
-     * @param Sequence<Task\Suspended|Task\Resumable|Task\Resumable> $tasks
+     * @param Sequence<Task\Suspended|Task\Resumable> $tasks
      * @param Sequence<mixed> $results
      */
     private function __construct(
@@ -121,8 +122,10 @@ final class State
     /**
      * @return array{self<C>, ?Scope\Terminated<C>}
      */
-    public function wait(Wait $wait): array
-    {
+    public function wait(
+        Clock $clock,
+        Wait $wait,
+    ): array {
         if (
             $this->scope instanceof Scope\Terminated &&
             $this->tasks->empty()
@@ -138,9 +141,42 @@ final class State
             return [$this, $this->scope->terminate()];
         }
 
-        // todo wait
+        if ($this->scope instanceof Scope\Suspended) {
+            $wait = $wait->with($this->scope->suspension());
+        }
 
-        return [$this, null];
+        $suspended = $this->tasks->keep(Instance::of(Task\Suspended::class));
+        $wait = $suspended->reduce(
+            $wait,
+            static fn(Wait $wait, $task) => $wait->with($task->suspension()),
+        );
+
+        $result = $wait();
+
+        if (\is_null($result)) {
+            return [$this, null];
+        }
+
+        $scope = $this->scope;
+        $resumable = $this->tasks->keep(Instance::of(Task\Resumable::class));
+
+        if ($scope instanceof Scope\Suspended) {
+            $scope = $scope->next($clock, $result);
+        }
+
+        return [
+            new self(
+                $scope,
+                $suspended
+                    ->map(static fn($task) => $task->next(
+                        $clock,
+                        $result,
+                    ))
+                    ->prepend($resumable),
+                $this->results,
+            ),
+            null,
+        ];
     }
 
     private function async(OperatingSystem $sync): OperatingSystem

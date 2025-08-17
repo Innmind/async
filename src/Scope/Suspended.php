@@ -7,6 +7,9 @@ use Innmind\Async\{
     Scope,
     Suspension,
 };
+use Innmind\TimeContinuum\Clock;
+use Innmind\IO\Internal\Watch\Ready;
+use Innmind\Immutable\Attempt;
 
 /**
  * Waiting for IO to be ready or halt to be finished
@@ -36,17 +39,30 @@ final class Suspended
     }
 
     /**
+     * @param Attempt<Ready> $ready
+     *
      * @return self<C>|Resumable<C>
      */
-    public function next(): self|Resumable
+    public function next(Clock $clock, Attempt $ready): self|Resumable
     {
-        // todo check from argument if suspension is fulfilled
-        if (false) {
-            return $this;
+        $next = $this->suspension->next(
+            $clock,
+            $ready,
+        );
+
+        if ($next instanceof Suspension) {
+            return new self(
+                $this->scope,
+                $this->fiber,
+                $next,
+            );
         }
 
-        $result = null; // todo from suspension result
+        return Resumable::of($this->scope, $this->fiber, $next);
+    }
 
-        return Resumable::of($this->scope, $this->fiber, $result);
+    public function suspension(): Suspension
+    {
+        return $this->suspension;
     }
 }
