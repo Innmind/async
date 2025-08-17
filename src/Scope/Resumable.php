@@ -40,8 +40,7 @@ final class Resumable
      */
     public function next(): Suspended|Restartable|Wakeable|Terminated
     {
-        /** @var ?Suspension */
-        $return = $this->fiber->resume($this->result);
+        $return = Suspension::of($this->fiber->resume($this->result));
 
         if ($return instanceof Suspension) {
             return Suspended::of(

@@ -54,13 +54,12 @@ final class Restartable
         Sequence $results,
     ): Suspended|self|Wakeable|Terminated {
         $fiber = $this->scope->new();
-        /** @var ?Suspension */
-        $return = $fiber->start(
+        $return = Suspension::of($fiber->start(
             $this->carry,
             $async,
             Continuation::new($this->carry),
             $results,
-        );
+        ));
 
         if ($return instanceof Suspension) {
             return Suspended::of(
