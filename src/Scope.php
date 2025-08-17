@@ -19,8 +19,11 @@ final class Scope
 
     /**
      * @psalm-pure
+     * @template C
      *
-     * @param callable(mixed, OperatingSystem, Continuation, Sequence<mixed>): Continuation $scope
+     * @param callable(C, OperatingSystem, Continuation<C>, Sequence<mixed>): Continuation<C> $scope
+     *
+     * @return Scope\Uninitialized<C>
      */
     public static function of(
         callable $scope,

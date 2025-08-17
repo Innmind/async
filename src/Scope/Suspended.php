@@ -10,6 +10,7 @@ use Innmind\Async\{
 
 /**
  * Waiting for IO to be ready or halt to be finished
+ * @template C
  */
 final class Suspended
 {
@@ -34,6 +35,9 @@ final class Suspended
         return new self($scope, $fiber, $suspension);
     }
 
+    /**
+     * @return self<C>|Resumable<C>
+     */
     public function next(): self|Resumable
     {
         // todo check from argument if suspension is fulfilled

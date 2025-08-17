@@ -14,9 +14,13 @@ use Innmind\Immutable\{
     Predicate\Instance,
 };
 
+/**
+ * @template C
+ */
 final class State
 {
     /**
+     * @param Scope\Uninitialized<C>|Scope\Suspended<C>|Scope\Resumable<C>|Scope\Restartable<C>|Scope\Wakeable<C>|Scope\Terminated<C> $scope
      * @param Sequence<Task\Suspended|Task\Resumable|Task\Resumable> $tasks
      * @param Sequence<mixed> $results
      */
@@ -27,6 +31,13 @@ final class State
     ) {
     }
 
+    /**
+     * @template A
+     *
+     * @param Scope\Uninitialized<A>|Scope\Suspended<A>|Scope\Resumable<A>|Scope\Restartable<A>|Scope\Wakeable<A>|Scope\Terminated<A> $scope
+     *
+     * @return self<A>
+     */
     public static function new(
         Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
     ): self {
@@ -37,6 +48,9 @@ final class State
         );
     }
 
+    /**
+     * @return self<C>
+     */
     public function next(OperatingSystem $sync): self
     {
         $scope = match (true) {
@@ -105,7 +119,7 @@ final class State
     }
 
     /**
-     * @return array{self, ?Scope\Terminated}
+     * @return array{self<C>, ?Scope\Terminated<C>}
      */
     public function wait(Wait $wait): array
     {

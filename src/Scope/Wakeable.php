@@ -13,6 +13,7 @@ use Innmind\Immutable\Sequence;
 /**
  * Scope call has finished but asked to call it again once tasks result are
  * available
+ * @template C
  */
 final class Wakeable
 {
@@ -20,6 +21,7 @@ final class Wakeable
      * @psalm-mutation-free
      *
      * @param Sequence<callable> $tasks
+     * @param C $carry
      */
     private function __construct(
         private Scope $scope,
@@ -30,8 +32,9 @@ final class Wakeable
 
     /**
      * @psalm-pure
+     * @template A
      *
-     * @return pure-callable(Sequence<callable>, mixed): self
+     * @return pure-callable(Sequence<callable>, A): self<A>
      */
     public static function of(Scope $scope): callable
     {
@@ -44,6 +47,8 @@ final class Wakeable
 
     /**
      * @param Sequence<mixed> $results
+     *
+     * @return Suspended<C>|Restartable<C>|self<C>|Terminated<C>
      */
     public function next(
         OperatingSystem $async,
@@ -76,6 +81,9 @@ final class Wakeable
         );
     }
 
+    /**
+     * @return Terminated<C>
+     */
     public function terminate(): Terminated
     {
         return Terminated::of(
@@ -92,13 +100,5 @@ final class Wakeable
     public function tasks(): Sequence
     {
         return $this->tasks;
-    }
-
-    /**
-     * @psalm-mutation-free
-     */
-    public function carry(): mixed
-    {
-        return $this->carry;
     }
 }

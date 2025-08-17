@@ -11,14 +11,27 @@ use Innmind\Async\{
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
+/**
+ * @template C
+ */
 final class Sink
 {
+    /**
+     * @param C $carry
+     */
     private function __construct(
         private OperatingSystem $sync,
         private mixed $carry,
     ) {
     }
 
+    /**
+     * @template A
+     *
+     * @param A $carry
+     *
+     * @return self<A>
+     */
     public static function of(
         OperatingSystem $sync,
         mixed $carry,
@@ -27,7 +40,9 @@ final class Sink
     }
 
     /**
-     * @param callable(mixed, OperatingSystem, Continuation, Sequence<mixed>): Continuation $scope
+     * @param callable(C, OperatingSystem, Continuation<C>, Sequence<mixed>): Continuation<C> $scope
+     *
+     * @return C
      */
     public function with(callable $scope): mixed
     {

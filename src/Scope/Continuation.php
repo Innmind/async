@@ -8,12 +8,13 @@ use Innmind\Immutable\Sequence;
 
 /**
  * @psalm-immutable
- * @todo carry template
+ * @template C
  */
 final class Continuation
 {
     /**
      * @param Sequence<callable> $tasks
+     * @param C $carry
      */
     private function __construct(
         private Next $next,
@@ -24,7 +25,12 @@ final class Continuation
 
     /**
      * @psalm-pure
+     * @template A
      * @internal
+     *
+     * @param A $carry
+     *
+     * @return self<A>
      */
     #[\NoDiscard]
     public static function new(mixed $carry): self
@@ -36,6 +42,11 @@ final class Continuation
         );
     }
 
+    /**
+     * @param C $carry
+     *
+     * @return self<C>
+     */
     #[\NoDiscard]
     public function carryWith(mixed $carry): self
     {
@@ -48,6 +59,8 @@ final class Continuation
 
     /**
      * @param Sequence<callable> $tasks
+     *
+     * @return self<C>
      */
     #[\NoDiscard]
     public function schedule(Sequence $tasks): self
@@ -63,6 +76,9 @@ final class Continuation
         );
     }
 
+    /**
+     * @return self<C>
+     */
     #[\NoDiscard]
     public function terminate(): self
     {
@@ -73,6 +89,9 @@ final class Continuation
         );
     }
 
+    /**
+     * @return self<C>
+     */
     #[\NoDiscard]
     public function wakeOnResult(): self
     {
@@ -85,15 +104,15 @@ final class Continuation
 
     /**
      * @internal
-     * @template A
-     * @template B
-     * @template C
+     * @template T
+     * @template U
+     * @template V
      *
-     * @param pure-callable(Sequence<callable>, mixed): A $restart
-     * @param pure-callable(Sequence<callable>, mixed): B $wake
-     * @param pure-callable(Sequence<callable>, mixed): C $terminate
+     * @param pure-callable(Sequence<callable>, C): T $restart
+     * @param pure-callable(Sequence<callable>, C): U $wake
+     * @param pure-callable(Sequence<callable>, C): V $terminate
      *
-     * @return A|B|C
+     * @return T|U|V
      */
     #[\NoDiscard]
     public function match(

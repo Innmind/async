@@ -12,6 +12,7 @@ use Innmind\Immutable\Sequence;
 
 /**
  * Scope call has finished but asked to call it again
+ * @template C
  */
 final class Restartable
 {
@@ -19,6 +20,7 @@ final class Restartable
      * @psalm-mutation-free
      *
      * @param Sequence<callable> $tasks
+     * @param C $carry
      */
     private function __construct(
         private Scope $scope,
@@ -29,8 +31,9 @@ final class Restartable
 
     /**
      * @psalm-pure
+     * @template A
      *
-     * @return pure-callable(Sequence<callable>, mixed): self
+     * @return pure-callable(Sequence<callable>, A): self<A>
      */
     public static function of(Scope $scope): callable
     {
@@ -43,6 +46,8 @@ final class Restartable
 
     /**
      * @param Sequence<mixed> $results
+     *
+     * @return Suspended<C>|self<C>|Wakeable<C>|Terminated<C>
      */
     public function next(
         OperatingSystem $async,

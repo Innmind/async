@@ -10,6 +10,7 @@ use Innmind\Async\{
 
 /**
  * IO is ready or halt is finished
+ * @template C
  */
 final class Resumable
 {
@@ -34,6 +35,9 @@ final class Resumable
         return new self($scope, $fiber, $result);
     }
 
+    /**
+     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Terminated<C>
+     */
     public function next(): Suspended|Restartable|Wakeable|Terminated
     {
         /** @var ?Suspension */

@@ -10,10 +10,15 @@ use Innmind\Async\{
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
+/**
+ * @template C
+ */
 final class Uninitialized
 {
     /**
      * @psalm-mutation-free
+     *
+     * @param C $carry
      */
     private function __construct(
         private Scope $scope,
@@ -23,12 +28,20 @@ final class Uninitialized
 
     /**
      * @psalm-pure
+     * @template A
+     *
+     * @param A $carry
+     *
+     * @return self<A>
      */
     public static function of(Scope $scope, mixed $carry): self
     {
         return new self($scope, $carry);
     }
 
+    /**
+     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Terminated<C>
+     */
     public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Terminated
     {
         $fiber = $this->scope->new();

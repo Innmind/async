@@ -18,6 +18,13 @@ final class Scheduler
         return new self($os);
     }
 
+    /**
+     * @template C
+     *
+     * @param C $carry
+     *
+     * @return Sink<C>
+     */
     public function sink(mixed $carry): Sink
     {
         return Sink::of($this->sync, $carry);
