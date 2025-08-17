@@ -55,7 +55,7 @@ final class Sink
             [$state, $terminated] = $state
                 ->next($this->sync)
                 ->wait(
-                    $this->sync->clock(),
+                    $this->sync,
                     Wait::nothing(),
                 );
         } while (\is_null($terminated));

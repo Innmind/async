@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
+use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\TimeContinuum\Period;
 use Innmind\IO\Internal\Watch;
 
 final class Wait
@@ -11,17 +13,21 @@ final class Wait
      * @psalm-mutation-free
      */
     private function __construct(
-        private ?Watch $watch,
+        private Watch|Period|null $wait,
     ) {
     }
 
-    public function __invoke(): ?Wait\IO
+    public function __invoke(OperatingSystem $sync): Wait\IO|Wait\Time|null
     {
-        if (\is_null($this->watch)) {
+        if (\is_null($this->wait)) {
             return null;
         }
 
-        return Wait\IO::of(($this->watch)());
+        if ($this->wait instanceof Period) {
+            return Wait\Time::of($sync->process()->halt($this->wait));
+        }
+
+        return Wait\IO::of(($this->wait)());
     }
 
     public static function nothing(): self
@@ -36,7 +42,7 @@ final class Wait
     public function with(Suspension $suspension): self
     {
         return new self(
-            $suspension->fold($this->watch),
+            $suspension->fold($this->wait),
         );
     }
 }

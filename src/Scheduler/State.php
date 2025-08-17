@@ -9,7 +9,6 @@ use Innmind\Async\{
     Wait,
 };
 use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\TimeContinuum\Clock;
 use Innmind\Immutable\{
     Sequence,
     Predicate\Instance,
@@ -123,7 +122,7 @@ final class State
      * @return array{self<C>, ?Scope\Terminated<C>}
      */
     public function wait(
-        Clock $clock,
+        OperatingSystem $sync,
         Wait $wait,
     ): array {
         if (
@@ -151,7 +150,7 @@ final class State
             static fn(Wait $wait, $task) => $wait->with($task->suspension()),
         );
 
-        $result = $wait();
+        $result = $wait($sync);
 
         if (\is_null($result)) {
             return [$this, null];
@@ -161,7 +160,7 @@ final class State
         $resumable = $this->tasks->keep(Instance::of(Task\Resumable::class));
 
         if ($scope instanceof Scope\Suspended) {
-            $scope = $scope->next($clock, $result);
+            $scope = $scope->next($sync->clock(), $result);
         }
 
         return [
@@ -169,7 +168,7 @@ final class State
                 $scope,
                 $suspended
                     ->map(static fn($task) => $task->next(
-                        $clock,
+                        $sync->clock(),
                         $result,
                     ))
                     ->prepend($resumable),

@@ -27,7 +27,7 @@ final class Suspended
 
     public function next(
         Clock $clock,
-        Wait\IO $result,
+        Wait\IO|Wait\Time $result,
     ): self|Resumable {
         $next = $this->suspension->next(
             $clock,

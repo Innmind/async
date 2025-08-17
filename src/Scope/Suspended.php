@@ -40,8 +40,10 @@ final class Suspended
     /**
      * @return self<C>|Resumable<C>
      */
-    public function next(Clock $clock, Wait\IO $result): self|Resumable
-    {
+    public function next(
+        Clock $clock,
+        Wait\IO|Wait\Time $result,
+    ): self|Resumable {
         $next = $this->suspension->next(
             $clock,
             $result,

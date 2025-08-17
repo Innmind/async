@@ -3,7 +3,8 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
-use Innmind\IO\Internal\Async\Resumable;
+use Innmind\TimeWarp\Async\Resumable as Halt;
+use Innmind\IO\Internal\Async\Resumable as IO;
 
 /**
  * @psalm-immutable
@@ -11,19 +12,19 @@ use Innmind\IO\Internal\Async\Resumable;
 final class Resumption
 {
     private function __construct(
-        private Resumable $kind,
+        private IO|Halt $kind,
     ) {
     }
 
     /**
      * @psalm-pure
      */
-    public static function of(Resumable $kind): self
+    public static function of(IO|Halt $kind): self
     {
         return new self($kind);
     }
 
-    public function unwrap(): Resumable
+    public function unwrap(): IO|Halt
     {
         return $this->kind;
     }

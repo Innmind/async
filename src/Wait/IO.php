@@ -4,7 +4,10 @@ declare(strict_types = 1);
 namespace Innmind\Async\Wait;
 
 use Innmind\IO\Internal\Watch\Ready;
-use Innmind\Immutable\Attempt;
+use Innmind\Immutable\{
+    Attempt,
+    SideEffect,
+};
 
 final class IO
 {
@@ -22,6 +25,13 @@ final class IO
     public static function of(Attempt $ready): self
     {
         return new self($ready);
+    }
+
+    public function toTime(): Time
+    {
+        return Time::of(
+            $this->ready->map(SideEffect::identity(...)),
+        );
     }
 
     /**
