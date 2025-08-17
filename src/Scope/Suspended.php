@@ -6,10 +6,9 @@ namespace Innmind\Async\Scope;
 use Innmind\Async\{
     Scope,
     Suspension,
+    Wait,
 };
 use Innmind\TimeContinuum\Clock;
-use Innmind\IO\Internal\Watch\Ready;
-use Innmind\Immutable\Attempt;
 
 /**
  * Waiting for IO to be ready or halt to be finished
@@ -39,15 +38,13 @@ final class Suspended
     }
 
     /**
-     * @param Attempt<Ready> $ready
-     *
      * @return self<C>|Resumable<C>
      */
-    public function next(Clock $clock, Attempt $ready): self|Resumable
+    public function next(Clock $clock, Wait\IO $result): self|Resumable
     {
         $next = $this->suspension->next(
             $clock,
-            $ready,
+            $result,
         );
 
         if ($next instanceof Suspension) {

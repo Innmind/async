@@ -3,11 +3,7 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
-use Innmind\IO\Internal\{
-    Watch,
-    Watch\Ready,
-};
-use Innmind\Immutable\Attempt;
+use Innmind\IO\Internal\Watch;
 
 final class Wait
 {
@@ -19,16 +15,13 @@ final class Wait
     ) {
     }
 
-    /**
-     * @return ?Attempt<Ready>
-     */
-    public function __invoke(): ?Attempt
+    public function __invoke(): ?Wait\IO
     {
         if (\is_null($this->watch)) {
             return null;
         }
 
-        return ($this->watch)();
+        return Wait\IO::of(($this->watch)());
     }
 
     public static function nothing(): self

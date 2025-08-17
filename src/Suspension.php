@@ -7,9 +7,7 @@ use Innmind\TimeContinuum\Clock;
 use Innmind\IO\Internal\{
     Async\Suspended,
     Watch,
-    Watch\Ready,
 };
-use Innmind\Immutable\Attempt;
 
 /**
  * @psalm-immutable
@@ -37,16 +35,13 @@ final class Suspension
         throw new \LogicException('Unknown kind of suspension');
     }
 
-    /**
-     * @param Attempt<Ready> $ready
-     */
     public function next(
         Clock $clock,
-        Attempt $ready,
+        Wait\IO $result,
     ): self|Resumption {
         $next = $this->kind->next(
             $clock,
-            $ready,
+            $result->unwrap(),
         );
 
         if ($next instanceof Suspended) {
