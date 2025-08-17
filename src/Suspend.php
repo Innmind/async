@@ -11,9 +11,11 @@ final class Suspend
 
     public function halt(): mixed
     {
+        return null;
     }
 
     public function wait(): mixed
     {
+        return null;
     }
 }
