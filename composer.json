@@ -18,7 +18,7 @@
         "php": "~8.2",
         "innmind/operating-system": "~6.0",
         "innmind/immutable": "~5.18",
-        "innmind/io": "~3.4"
+        "innmind/io": "^3.4.1"
     },
     "autoload": {
         "psr-4": {

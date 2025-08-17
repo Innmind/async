@@ -5,9 +5,6 @@ namespace Innmind\Async;
 
 use Innmind\IO\Internal\Async\Resumable;
 
-use Innmind\IO\Internal\Watch\Ready;
-use Innmind\Immutable\Attempt;
-
 /**
  * @psalm-immutable
  */
@@ -26,11 +23,8 @@ final class Resumption
         return new self($kind);
     }
 
-    /**
-     * @return Attempt<Ready>
-     */
-    public function unwrap(): Attempt
+    public function unwrap(): Resumable
     {
-        return $this->kind->ready();
+        return $this->kind;
     }
 }

@@ -9,11 +9,11 @@ use Innmind\IO\Internal\{
     Watch,
 };
 
-/**
- * @psalm-immutable
- */
 final class Suspension
 {
+    /**
+     * @psalm-mutation-free
+     */
     private function __construct(
         private Suspended $kind,
     ) {
@@ -51,6 +51,9 @@ final class Suspension
         return Resumption::of($next);
     }
 
+    /**
+     * @psalm-mutation-free
+     */
     public function fold(?Watch $watch): ? Watch
     {
         $self = $this->kind->watch();
