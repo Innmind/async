@@ -11,7 +11,7 @@ use Innmind\BlackBox\{
 
 Application::new($argv)
     ->when(
-        \get_env('ENABLE_COVERAGE') !== false,
+        \getenv('ENABLE_COVERAGE') !== false,
         static fn(Application $app) => $app 
             ->scenariiPerProof(1)
             ->codeCoverage(
