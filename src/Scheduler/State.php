@@ -65,16 +65,17 @@ final class State
                 $this->async($sync),
                 $this->results,
             ),
-            !$this->results->empty() &&
-            $this->scope instanceof Scope\Wakeable => $this->scope->next(
-                $this->async($sync),
-                $this->results,
-            ),
+            $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
+                true => $this->scope,
+                false => $this->scope->next(
+                    $this->async($sync),
+                    $this->results,
+                ),
+            },
             $this->scope instanceof Scope\Terminated => $this->scope->next(),
         };
         $results = match (true) {
             $this->scope instanceof Scope\Restartable => $this->results->clear(),
-            !$this->results->empty() &&
             $this->scope instanceof Scope\Wakeable => $this->results->clear(),
             default => $this->results,
         };
