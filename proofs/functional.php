@@ -212,7 +212,7 @@ return static function() {
                                 },
                             ))
                             ->terminate();
-                        },
+                    },
                 );
             $assert->same(
                 ['{', 'MIT License', 'SOFTWARE.', '}'],
