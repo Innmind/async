@@ -25,8 +25,7 @@ final class Uninitialized
     public function next(OperatingSystem $async): Suspended|Terminated
     {
         $fiber = new \Fiber($this->task);
-        /** @var ?Suspension */
-        $return = $fiber->start($async);
+        $return = Suspension::of($fiber->start($async));
 
         if ($return instanceof Suspension) {
             return Suspended::of(
