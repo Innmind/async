@@ -116,6 +116,16 @@ final class State
             ),
         );
 
+        // At this point the scope may be restartable with tasks being suspended
+        // meaning the scope will have to wait the amount of time specified by
+        // the tasks' suspension before being restarted. This means that the
+        // whole thing could be slower than imagined.
+        // However we do not restart the scope, by recursively calling
+        // `$this->next()`, as it may result in an accumulation of tasks that
+        // are suspended and never advanced (never resumed after a halt or
+        // streams never read). This case could happen if the user defined scope
+        // is designed as an infinite loop that always schedule new tasks.
+
         return new self(
             $scope,
             $tasks,

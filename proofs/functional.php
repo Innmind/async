@@ -143,6 +143,62 @@ return static function() {
     );
 
     yield test(
+        'The scope and tasks are run asynchronously',
+        static function($assert) {
+            $expect = $assert->time(static function() use ($assert) {
+                $results = [];
+                Scheduler::of(Factory::build())
+                    ->sink(false)
+                    ->with(
+                        static function($started, $os, $continuation) use ($assert, &$results) {
+                            if ($started) {
+                                $os
+                                    ->process()
+                                    ->halt(Period::second(2))
+                                    ->unwrap();
+                                $results[] = 'scope';
+
+                                return $continuation->terminate();
+                            }
+
+                            return $continuation
+                                ->carryWith(true)
+                                ->schedule(Sequence::of(
+                                    static function($os) use (&$results) {
+                                        // This task halts for 4 seconds because
+                                        // if less then it may sometime finish
+                                        // before the scope. (as 3-1 ~= 2s)
+                                        $os
+                                            ->process()
+                                            ->halt(Period::second(4))
+                                            ->unwrap();
+                                        $results[] = 'task 1';
+                                    },
+                                    static function($os) use (&$results) {
+                                        $os
+                                            ->process()
+                                            ->halt(Period::second(1))
+                                            ->unwrap();
+                                        $results[] = 'task 2';
+                                    },
+                                ));
+                        },
+                    );
+                $assert->same(
+                    ['task 2', 'scope', 'task 1'],
+                    $results,
+                );
+            });
+            $expect
+                ->inLessThan()
+                ->seconds(5);
+            $expect
+                ->inMoreThan()
+                ->seconds(2);
+        },
+    );
+
+    yield test(
         'Streams read by lines are handled asynchronously',
         static function($assert) {
             $lines = [];
