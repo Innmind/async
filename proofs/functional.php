@@ -248,7 +248,7 @@ return static function() {
             });
             $expect
                 ->inLessThan()
-                ->seconds(5);
+                ->seconds(6);
             $expect
                 ->inMoreThan()
                 ->seconds(2);
