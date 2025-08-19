@@ -21,7 +21,7 @@ final class Restartable
     /**
      * @psalm-mutation-free
      *
-     * @param Sequence<callable> $tasks
+     * @param Sequence<callable(OperatingSystem)> $tasks
      * @param C $carry
      */
     private function __construct(
@@ -35,7 +35,7 @@ final class Restartable
      * @psalm-pure
      * @template A
      *
-     * @return pure-callable(Sequence<callable>, A): self<A>
+     * @return pure-callable(Sequence<callable(OperatingSystem)>, A): self<A>
      */
     #[\NoDiscard]
     public static function of(Scope $scope): callable
@@ -86,7 +86,7 @@ final class Restartable
     /**
      * @psalm-mutation-free
      *
-     * @return Sequence<callable>
+     * @return Sequence<callable(OperatingSystem)>
      */
     #[\NoDiscard]
     public function tasks(): Sequence

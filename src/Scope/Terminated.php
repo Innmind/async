@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace Innmind\Async\Scope;
 
+use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
 /**
@@ -15,7 +16,7 @@ use Innmind\Immutable\Sequence;
 final class Terminated
 {
     /**
-     * @param Sequence<callable> $tasks
+     * @param Sequence<callable(OperatingSystem)> $tasks
      * @param C $carry
      */
     private function __construct(
@@ -28,7 +29,7 @@ final class Terminated
      * @psalm-pure
      * @template A
      *
-     * @param Sequence<callable> $tasks
+     * @param Sequence<callable(OperatingSystem)> $tasks
      * @param A $carry
      *
      * @return self<A>
@@ -54,7 +55,7 @@ final class Terminated
     }
 
     /**
-     * @return Sequence<callable>
+     * @return Sequence<callable(OperatingSystem)>
      */
     #[\NoDiscard]
     public function tasks(): Sequence
