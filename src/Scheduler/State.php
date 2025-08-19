@@ -156,7 +156,7 @@ final class State
                 $this->results,
             ),
             $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
-                true => $this->scope,
+                true => $this->scope->clear(), // clear tasks otherwise they're infinitely restarted
                 false => $this->scope->next(
                     $this->async($sync),
                     $this->results,
@@ -167,6 +167,7 @@ final class State
         $results = match (true) {
             $this->scope instanceof Scope\Restartable => $this->results->clear(),
             $this->scope instanceof Scope\Wakeable => $this->results->clear(),
+            $this->scope instanceof Scope\Terminated => $this->results->clear(),
             default => $this->results,
         };
         $tasks = match (true) {
@@ -198,7 +199,8 @@ final class State
         $results = $results->append(
             $tasks
                 ->keep(Instance::of(Task\Terminated::class))
-                ->map(static fn($task): mixed => $task->returned()),
+                ->map(static fn($task): mixed => $task->returned())
+                ->exclude(static fn($value) => $value === Task\Discard::result),
         );
         $tasks = $tasks->keep(
             Instance::of(Task\Suspended::class)->or(

@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 use Innmind\Async\{
     Scheduler,
+    Task,
 };
 use Innmind\OperatingSystem\Factory;
 use Innmind\TimeContinuum\Period;
@@ -445,6 +446,26 @@ return static function() {
                 ['second', 'first'],
                 $order,
             );
+        },
+    );
+
+    yield test(
+        'Discard results',
+        static function($assert) {
+            $results = Scheduler::of(Factory::build())
+                ->sink(Sequence::of())
+                ->with(
+                    static fn($all, $__, $continuation, $results) => $continuation
+                        ->schedule(Sequence::of(
+                            static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
+                            static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
+                            static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
+                        )->map(Task\Discard::result(...)))
+                        ->carryWith($all->append($results))
+                        ->wakeOnResult(),
+                );
+
+            $assert->count(0, $results);
         },
     );
 };

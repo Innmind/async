@@ -85,6 +85,18 @@ final class Wakeable
     }
 
     /**
+     * @return self<C>
+     */
+    public function clear(): self
+    {
+        return new self(
+            $this->scope,
+            $this->tasks->clear(),
+            $this->carry,
+        );
+    }
+
+    /**
      * @return Terminated<C>
      */
     #[\NoDiscard]
