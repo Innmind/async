@@ -10,20 +10,30 @@ use Innmind\Async\{
 
 /**
  * IO is ready or halt is finished
+ *
+ * @internal
  */
 final class Resumable
 {
+    /**
+     * @psalm-mutation-free
+     */
     private function __construct(
         private \Fiber $fiber,
         private Resumption $resumption,
     ) {
     }
 
+    /**
+     * @psalm-pure
+     */
+    #[\NoDiscard]
     public static function of(\Fiber $fiber, Resumption $resumption): self
     {
         return new self($fiber, $resumption);
     }
 
+    #[\NoDiscard]
     public function next(): Suspended|Terminated
     {
         $return = Suspension::of($this->fiber->resume(

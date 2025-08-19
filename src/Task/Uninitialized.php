@@ -8,13 +8,23 @@ use Innmind\Async\{
 };
 use Innmind\OperatingSystem\OperatingSystem;
 
+/**
+ * @internal
+ */
 final class Uninitialized
 {
+    /**
+     * @psalm-mutation-free
+     */
     private function __construct(
         private \Closure $task,
     ) {
     }
 
+    /**
+     * @psalm-pure
+     */
+    #[\NoDiscard]
     public static function of(callable $task): self
     {
         return new self(
@@ -22,6 +32,7 @@ final class Uninitialized
         );
     }
 
+    #[\NoDiscard]
     public function next(OperatingSystem $async): Suspended|Terminated
     {
         $fiber = new \Fiber($this->task);

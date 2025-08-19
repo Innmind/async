@@ -7,6 +7,9 @@ use Innmind\Async\Scope\Continuation;
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
+/**
+ * @internal
+ */
 final class Scope
 {
     /**
@@ -25,6 +28,7 @@ final class Scope
      *
      * @return Scope\Uninitialized<C>
      */
+    #[\NoDiscard]
     public static function of(
         callable $scope,
         mixed $carry,
@@ -35,6 +39,7 @@ final class Scope
         );
     }
 
+    #[\NoDiscard]
     public function new(): \Fiber
     {
         return new \Fiber($this->scope);

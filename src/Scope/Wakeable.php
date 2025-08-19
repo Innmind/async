@@ -13,6 +13,8 @@ use Innmind\Immutable\Sequence;
 /**
  * Scope call has finished but asked to call it again once tasks result are
  * available
+ *
+ * @internal
  * @template C
  */
 final class Wakeable
@@ -36,6 +38,7 @@ final class Wakeable
      *
      * @return pure-callable(Sequence<callable>, A): self<A>
      */
+    #[\NoDiscard]
     public static function of(Scope $scope): callable
     {
         return static fn(Sequence $tasks, mixed $carry) => new self(
@@ -50,6 +53,7 @@ final class Wakeable
      *
      * @return Suspended<C>|Restartable<C>|self<C>|Terminated<C>
      */
+    #[\NoDiscard]
     public function next(
         OperatingSystem $async,
         Sequence $results,
@@ -83,6 +87,7 @@ final class Wakeable
     /**
      * @return Terminated<C>
      */
+    #[\NoDiscard]
     public function terminate(): Terminated
     {
         return Terminated::of(
@@ -96,6 +101,7 @@ final class Wakeable
      *
      * @return Sequence<callable>
      */
+    #[\NoDiscard]
     public function tasks(): Sequence
     {
         return $this->tasks;

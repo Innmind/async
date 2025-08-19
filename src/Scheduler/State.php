@@ -19,6 +19,7 @@ use Innmind\Immutable\{
 };
 
 /**
+ * @internal
  * @template C
  */
 final class State
@@ -42,6 +43,7 @@ final class State
      *
      * @return self<A>
      */
+    #[\NoDiscard]
     public static function new(
         Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
     ): self {
@@ -55,6 +57,7 @@ final class State
     /**
      * @return self<C>
      */
+    #[\NoDiscard]
     public function next(OperatingSystem $sync): self
     {
         $self = $this;
@@ -81,6 +84,7 @@ final class State
     /**
      * @return array{self<C>, ?Scope\Terminated<C>}
      */
+    #[\NoDiscard]
     public function wait(
         OperatingSystem $sync,
         Wait $wait,

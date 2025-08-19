@@ -17,6 +17,8 @@ use Innmind\Immutable\Sequence;
 final class Sink
 {
     /**
+     * @psalm-mutation-free
+     *
      * @param C $carry
      */
     private function __construct(
@@ -26,12 +28,15 @@ final class Sink
     }
 
     /**
+     * @internal
+     * @psalm-pure
      * @template A
      *
      * @param A $carry
      *
      * @return self<A>
      */
+    #[\NoDiscard]
     public static function of(
         OperatingSystem $sync,
         mixed $carry,

@@ -7,6 +7,9 @@ use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\TimeContinuum\Period;
 use Innmind\IO\Internal\Watch;
 
+/**
+ * @internal
+ */
 final class Wait
 {
     /**
@@ -17,6 +20,7 @@ final class Wait
     ) {
     }
 
+    #[\NoDiscard]
     public function __invoke(OperatingSystem $sync): Wait\IO|Wait\Time|null
     {
         if (\is_null($this->wait)) {
@@ -30,6 +34,10 @@ final class Wait
         return Wait\IO::of(($this->wait)());
     }
 
+    /**
+     * @psalm-pure
+     */
+    #[\NoDiscard]
     public static function nothing(): self
     {
         return new self(null);

@@ -11,6 +11,8 @@ use Innmind\Async\{
 
 /**
  * IO is ready or halt is finished
+ *
+ * @internal
  * @template C
  */
 final class Resumable
@@ -28,6 +30,7 @@ final class Resumable
     /**
      * @psalm-pure
      */
+    #[\NoDiscard]
     public static function of(
         Scope $scope,
         \Fiber $fiber,
@@ -39,6 +42,7 @@ final class Resumable
     /**
      * @return Suspended<C>|Restartable<C>|Wakeable<C>|Terminated<C>
      */
+    #[\NoDiscard]
     public function next(): Suspended|Restartable|Wakeable|Terminated
     {
         $return = Suspension::of($this->fiber->resume(

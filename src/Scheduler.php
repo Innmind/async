@@ -6,6 +6,9 @@ namespace Innmind\Async;
 use Innmind\Async\Scheduler\Sink;
 use Innmind\OperatingSystem\OperatingSystem;
 
+/**
+ * @psalm-immutable
+ */
 final class Scheduler
 {
     private function __construct(
@@ -13,6 +16,10 @@ final class Scheduler
     ) {
     }
 
+    /**
+     * @psalm-pure
+     */
+    #[\NoDiscard]
     public static function of(OperatingSystem $os): self
     {
         return new self($os);
@@ -25,6 +32,7 @@ final class Scheduler
      *
      * @return Sink<C>
      */
+    #[\NoDiscard]
     public function sink(mixed $carry): Sink
     {
         return Sink::of($this->sync, $carry);

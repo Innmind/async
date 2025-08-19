@@ -13,6 +13,9 @@ use Innmind\IO\Internal\{
     Watch,
 };
 
+/**
+ * @internal
+ */
 final class Suspension
 {
     /**
@@ -26,6 +29,7 @@ final class Suspension
     /**
      * @psalm-pure
      */
+    #[\NoDiscard]
     public static function of(mixed $kind): ?self
     {
         if (\is_null($kind)) {
@@ -39,6 +43,7 @@ final class Suspension
         throw new \LogicException('Unknown kind of suspension');
     }
 
+    #[\NoDiscard]
     public function next(
         Clock $clock,
         Wait\IO|Wait\Time $result,
@@ -85,6 +90,7 @@ final class Suspension
     /**
      * @psalm-mutation-free
      */
+    #[\NoDiscard]
     public function fold(Watch|Period|null $wait): Watch|Period|null
     {
         if (\is_null($wait)) {

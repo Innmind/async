@@ -8,6 +8,10 @@ use Innmind\Immutable\{
     SideEffect,
 };
 
+/**
+ * @internal
+ * @psalm-immutable
+ */
 final class Time
 {
     /**
@@ -19,8 +23,11 @@ final class Time
     }
 
     /**
+     * @psalm-pure
+     *
      * @param Attempt<SideEffect> $result
      */
+    #[\NoDiscard]
     public static function of(Attempt $result): self
     {
         return new self($result);
@@ -29,6 +36,7 @@ final class Time
     /**
      * @return Attempt<SideEffect>
      */
+    #[\NoDiscard]
     public function unwrap(): Attempt
     {
         return $this->result;

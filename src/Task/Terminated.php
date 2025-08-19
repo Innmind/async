@@ -5,6 +5,9 @@ namespace Innmind\Async\Task;
 
 /**
  * Task should be disposed
+ *
+ * @internal
+ * @psalm-immutable
  */
 final class Terminated
 {
@@ -13,11 +16,16 @@ final class Terminated
     ) {
     }
 
+    /**
+     * @psalm-pure
+     */
+    #[\NoDiscard]
     public static function of(mixed $returned): self
     {
         return new self($returned);
     }
 
+    #[\NoDiscard]
     public function returned(): mixed
     {
         return $this->returned;

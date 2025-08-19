@@ -7,6 +7,8 @@ use Innmind\Immutable\Sequence;
 
 /**
  * Scope call has finished and should be disposed
+ *
+ * @internal
  * @psalm-immutable
  * @template C
  */
@@ -31,6 +33,7 @@ final class Terminated
      *
      * @return self<A>
      */
+    #[\NoDiscard]
     public static function of(
         Sequence $tasks,
         mixed $carry,
@@ -41,6 +44,7 @@ final class Terminated
     /**
      * @return self<C>
      */
+    #[\NoDiscard]
     public function next(): self
     {
         return new self(
@@ -52,6 +56,7 @@ final class Terminated
     /**
      * @return Sequence<callable>
      */
+    #[\NoDiscard]
     public function tasks(): Sequence
     {
         return $this->tasks;
@@ -60,6 +65,7 @@ final class Terminated
     /**
      * @return C
      */
+    #[\NoDiscard]
     public function carry(): mixed
     {
         return $this->carry;

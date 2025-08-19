@@ -11,6 +11,7 @@ use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
 /**
+ * @internal
  * @template C
  */
 final class Uninitialized
@@ -34,6 +35,7 @@ final class Uninitialized
      *
      * @return self<A>
      */
+    #[\NoDiscard]
     public static function of(Scope $scope, mixed $carry): self
     {
         return new self($scope, $carry);
@@ -42,6 +44,7 @@ final class Uninitialized
     /**
      * @return Suspended<C>|Restartable<C>|Wakeable<C>|Terminated<C>
      */
+    #[\NoDiscard]
     public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Terminated
     {
         $fiber = $this->scope->new();

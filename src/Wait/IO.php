@@ -9,6 +9,10 @@ use Innmind\Immutable\{
     SideEffect,
 };
 
+/**
+ * @internal
+ * @psalm-immutable
+ */
 final class IO
 {
     /**
@@ -20,13 +24,17 @@ final class IO
     }
 
     /**
+     * @psalm-pure
+     *
      * @param Attempt<Ready> $ready
      */
+    #[\NoDiscard]
     public static function of(Attempt $ready): self
     {
         return new self($ready);
     }
 
+    #[\NoDiscard]
     public function toTime(): Time
     {
         return Time::of(
@@ -37,6 +45,7 @@ final class IO
     /**
      * @return Attempt<Ready>
      */
+    #[\NoDiscard]
     public function unwrap(): Attempt
     {
         return $this->ready;
