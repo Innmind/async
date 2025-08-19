@@ -156,7 +156,7 @@ final class State
                 $this->results,
             ),
             $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
-                true => $this->scope,
+                true => $this->scope->clear(), // clear tasks otherwise they're infinitely restarted
                 false => $this->scope->next(
                     $this->async($sync),
                     $this->results,
