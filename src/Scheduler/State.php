@@ -57,80 +57,25 @@ final class State
      */
     public function next(OperatingSystem $sync): self
     {
-        $scope = match (true) {
-            $this->scope instanceof Scope\Uninitialized => $this->scope->next($this->async($sync)),
-            $this->scope instanceof Scope\Suspended => $this->scope, // only the wait can advance
-            $this->scope instanceof Scope\Resumable => $this->scope->next(),
-            $this->scope instanceof Scope\Restartable => $this->scope->next(
-                $this->async($sync),
-                $this->results,
-            ),
-            $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
-                true => $this->scope,
-                false => $this->scope->next(
-                    $this->async($sync),
-                    $this->results,
-                ),
-            },
-            $this->scope instanceof Scope\Terminated => $this->scope->next(),
-        };
-        $results = match (true) {
-            $this->scope instanceof Scope\Restartable => $this->results->clear(),
-            $this->scope instanceof Scope\Wakeable => $this->results->clear(),
-            default => $this->results,
-        };
-        $tasks = match (true) {
-            $scope instanceof Scope\Restartable => $scope->tasks(),
-            $scope instanceof Scope\Wakeable => $scope->tasks(),
-            $scope instanceof Scope\Terminated => $scope->tasks(),
-            default => Sequence::of(),
-        };
+        $self = $this;
 
-        // The new tasks are appended after in order to prioritize finishing
-        // existing tasks. If exisiting ones can be finished in this iteration
-        // then it allows to free memory early.
-        // If the new tasks would be prioritized then it would need to allocate
-        // new memory to start these tasks and eventually then free memory for
-        // existing tasks about to finish.
-        // The end result is the same but this way it should have the lowest
-        // memory footprint.
-        $tasks = $this
-            ->tasks
-            ->map(static fn($task) => match (true) {
-                $task instanceof Task\Suspended => $task, // only the wait can advance
-                $task instanceof Task\Resumable => $task->next(),
-            })
-            ->append(
-                $tasks
-                    ->map(Task\Uninitialized::of(...))
-                    ->map(fn($task) => $task->next($this->async($sync))),
-            );
-        $results = $results->append(
-            $tasks
-                ->keep(Instance::of(Task\Terminated::class))
-                ->map(static fn($task): mixed => $task->returned()),
-        );
-        $tasks = $tasks->keep(
-            Instance::of(Task\Suspended::class)->or(
-                Instance::of(Task\Resumable::class),
-            ),
-        );
+        do {
+            $self = $self->doNext($sync);
+            // At this point the scope may be restartable with tasks being
+            // suspended meaning the scope will have to wait the amount of time
+            // specified by the tasks' suspension before being restarted. This
+            // means that the whole thing could be slower than imagined.
+            // We restart the scope to try to reach a point where it's suspended
+            // hopefully to wait before scheduling new tasks. This way the scope
+            // waits less time before scheduling new ones and prevents not
+            // watching eventual streams or halting the _process_.
+            // However if the user defined scope is designed as an infinite loop
+            // scheduling new tasks each time that are suspended upon
+            // initialization then it will result in an accumulation of
+            // suspended tasks that will fill the process memory.
+        } while ($self->scope instanceof Scope\Restartable);
 
-        // At this point the scope may be restartable with tasks being suspended
-        // meaning the scope will have to wait the amount of time specified by
-        // the tasks' suspension before being restarted. This means that the
-        // whole thing could be slower than imagined.
-        // However we do not restart the scope, by recursively calling
-        // `$this->next()`, as it may result in an accumulation of tasks that
-        // are suspended and never advanced (never resumed after a halt or
-        // streams never read). This case could happen if the user defined scope
-        // is designed as an infinite loop that always schedule new tasks.
-
-        return new self(
-            $scope,
-            $tasks,
-            $results,
-        );
+        return $self;
     }
 
     /**
@@ -191,6 +136,77 @@ final class State
             ),
             null,
         ];
+    }
+
+    /**
+     * @return self<C>
+     */
+    private function doNext(OperatingSystem $sync): self
+    {
+        $scope = match (true) {
+            $this->scope instanceof Scope\Uninitialized => $this->scope->next($this->async($sync)),
+            $this->scope instanceof Scope\Suspended => $this->scope, // only the wait can advance
+            $this->scope instanceof Scope\Resumable => $this->scope->next(),
+            $this->scope instanceof Scope\Restartable => $this->scope->next(
+                $this->async($sync),
+                $this->results,
+            ),
+            $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
+                true => $this->scope,
+                false => $this->scope->next(
+                    $this->async($sync),
+                    $this->results,
+                ),
+            },
+            $this->scope instanceof Scope\Terminated => $this->scope->next(),
+        };
+        $results = match (true) {
+            $this->scope instanceof Scope\Restartable => $this->results->clear(),
+            $this->scope instanceof Scope\Wakeable => $this->results->clear(),
+            default => $this->results,
+        };
+        $tasks = match (true) {
+            $scope instanceof Scope\Restartable => $scope->tasks(),
+            $scope instanceof Scope\Wakeable => $scope->tasks(),
+            $scope instanceof Scope\Terminated => $scope->tasks(),
+            default => Sequence::of(),
+        };
+
+        // The new tasks are appended after in order to prioritize finishing
+        // existing tasks. If exisiting ones can be finished in this iteration
+        // then it allows to free memory early.
+        // If the new tasks would be prioritized then it would need to allocate
+        // new memory to start these tasks and eventually then free memory for
+        // existing tasks about to finish.
+        // The end result is the same but this way it should have the lowest
+        // memory footprint.
+        $tasks = $this
+            ->tasks
+            ->map(static fn($task) => match (true) {
+                $task instanceof Task\Suspended => $task, // only the wait can advance
+                $task instanceof Task\Resumable => $task->next(),
+            })
+            ->append(
+                $tasks
+                    ->map(Task\Uninitialized::of(...))
+                    ->map(fn($task) => $task->next($this->async($sync))),
+            );
+        $results = $results->append(
+            $tasks
+                ->keep(Instance::of(Task\Terminated::class))
+                ->map(static fn($task): mixed => $task->returned()),
+        );
+        $tasks = $tasks->keep(
+            Instance::of(Task\Suspended::class)->or(
+                Instance::of(Task\Resumable::class),
+            ),
+        );
+
+        return new self(
+            $scope,
+            $tasks,
+            $results,
+        );
     }
 
     private function async(OperatingSystem $sync): OperatingSystem
