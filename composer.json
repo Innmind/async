@@ -15,7 +15,11 @@
         "issues": "http://github.com/innmind/async/issues"
     },
     "require": {
-        "php": "~8.2"
+        "php": "~8.2",
+        "innmind/operating-system": "~6.1",
+        "innmind/immutable": "~5.18",
+        "innmind/io": "^3.5.1",
+        "innmind/time-warp": "^4.1.1"
     },
     "autoload": {
         "psr-4": {
@@ -24,7 +28,7 @@
     },
     "require-dev": {
         "innmind/static-analysis": "^1.2.1",
-        "innmind/black-box": "~6.4",
+        "innmind/black-box": "~6.5",
         "innmind/coding-standard": "~2.0"
     }
 }
