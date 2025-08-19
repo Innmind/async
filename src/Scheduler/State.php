@@ -167,6 +167,7 @@ final class State
         $results = match (true) {
             $this->scope instanceof Scope\Restartable => $this->results->clear(),
             $this->scope instanceof Scope\Wakeable => $this->results->clear(),
+            $this->scope instanceof Scope\Terminated => $this->results->clear(),
             default => $this->results,
         };
         $tasks = match (true) {
