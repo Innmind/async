@@ -198,7 +198,8 @@ final class State
         $results = $results->append(
             $tasks
                 ->keep(Instance::of(Task\Terminated::class))
-                ->map(static fn($task): mixed => $task->returned()),
+                ->map(static fn($task): mixed => $task->returned())
+                ->exclude(static fn($value) => $value === Task\Discard::result),
         );
         $tasks = $tasks->keep(
             Instance::of(Task\Suspended::class)->or(
