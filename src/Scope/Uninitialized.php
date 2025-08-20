@@ -42,10 +42,10 @@ final class Uninitialized
     }
 
     /**
-     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Finished<C>
+     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Terminated<C>|Finished<C>
      */
     #[\NoDiscard]
-    public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Aborted|Finished
+    public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Terminated|Finished
     {
         $fiber = $this->scope->new();
         $return = Suspension::of($fiber->start(
@@ -69,7 +69,7 @@ final class Uninitialized
         return $continuation->match(
             Restartable::of($this->scope),
             Wakeable::of($this->scope),
-            Aborted::of(...),
+            Terminated::of(...),
             Finished::of(...),
         );
     }

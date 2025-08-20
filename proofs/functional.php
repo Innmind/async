@@ -547,7 +547,7 @@ return static function() {
                                 ->halt(Period::second(1))
                                 ->unwrap();
 
-                            return $continuation->abort();
+                            return $continuation->terminate();
                         },
                     );
             });

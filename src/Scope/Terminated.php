@@ -10,7 +10,7 @@ namespace Innmind\Async\Scope;
  * @psalm-immutable
  * @template C
  */
-final class Aborted
+final class Terminated
 {
     /**
      * @param C $carry

@@ -9,7 +9,7 @@ use Innmind\Async\{
     Scope\Resumable,
     Scope\Restartable,
     Scope\Wakeable,
-    Scope\Aborted,
+    Scope\Terminated,
     Scope\Finished,
     Wait,
     Config,
@@ -24,11 +24,11 @@ use Innmind\Immutable\Sequence;
 final class State
 {
     /**
-     * @param Uninitialized<C>|Suspended<C>|Resumable<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Finished<C> $scope
+     * @param Uninitialized<C>|Suspended<C>|Resumable<C>|Restartable<C>|Wakeable<C>|Terminated<C>|Finished<C> $scope
      * @param Sequence<mixed> $results
      */
     private function __construct(
-        private Uninitialized|Suspended|Resumable|Restartable|Wakeable|Aborted|Finished $scope,
+        private Uninitialized|Suspended|Resumable|Restartable|Wakeable|Terminated|Finished $scope,
         private Tasks $tasks,
         private Sequence $results,
         private Config\Provider $config,
@@ -85,7 +85,7 @@ final class State
     }
 
     /**
-     * @return array{self<C>, Aborted<C>|Finished<C>|null}
+     * @return array{self<C>, Terminated<C>|Finished<C>|null}
      */
     #[\NoDiscard]
     public function wait(
@@ -100,7 +100,7 @@ final class State
         }
 
         if (
-            $this->scope instanceof Aborted &&
+            $this->scope instanceof Terminated &&
             $this->tasks->empty()
         ) {
             return [$this, $this->scope];
@@ -171,13 +171,13 @@ final class State
                     $this->results,
                 ),
             },
-            $this->scope instanceof Aborted => $this->scope,
+            $this->scope instanceof Terminated => $this->scope,
             $this->scope instanceof Finished => $this->scope->next(),
         };
         $results = match (true) {
             $this->scope instanceof Restartable => $this->results->clear(),
             $this->scope instanceof Wakeable => $this->results->clear(),
-            $this->scope instanceof Aborted => $this->results->clear(),
+            $this->scope instanceof Terminated => $this->results->clear(),
             $this->scope instanceof Finished => $this->results->clear(),
             default => $this->results,
         };
@@ -193,7 +193,7 @@ final class State
         // We try to abort before advancing tasks as it may start new
         // unscheduled tasks. This way we prevent starting them and aborting
         // them right after.
-        if ($scope instanceof Aborted) {
+        if ($scope instanceof Terminated) {
             $tasks = $tasks->abort();
         }
 
