@@ -32,6 +32,7 @@ final class Uninitialized
     #[\NoDiscard]
     public static function of(callable $task): self
     {
+        /** @psalm-suppress ImpureMethodCall Todo fix in innmind/signals */
         return new self(
             \Closure::fromCallable($task),
             Interceptor::new(),
