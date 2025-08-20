@@ -41,6 +41,7 @@ final class Tasks
      *
      * @param ?int<2, max> $concurrencyLimit
      */
+    #[\NoDiscard]
     public static function none(Config $config, ?int $concurrencyLimit): self
     {
         return new self(
@@ -52,6 +53,7 @@ final class Tasks
         );
     }
 
+    #[\NoDiscard]
     public function empty(): bool
     {
         return $this->suspended->empty() &&
@@ -64,6 +66,7 @@ final class Tasks
      *
      * @return array{self, Sequence<mixed>}
      */
+    #[\NoDiscard]
     public function next(
         OperatingSystem $sync,
         Sequence $new,
@@ -108,6 +111,7 @@ final class Tasks
     /**
      * @return Sequence<Suspension>
      */
+    #[\NoDiscard]
     public function suspensions(): Sequence
     {
         return $this->suspended->map(
@@ -115,6 +119,7 @@ final class Tasks
         );
     }
 
+    #[\NoDiscard]
     public function awaited(
         OperatingSystem $sync,
         Wait\IO|Wait\Time $result,
