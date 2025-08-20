@@ -84,7 +84,7 @@ use Innmind\Immutable\Sequence;
             $continuation = $continuation->carryWith([$users, $finished, $launched]);
 
             if ($finished === 2) {
-                $continuation = $continuation->terminate();
+                $continuation = $continuation->finish();
             }
 
             return $continuation->wakeOnResult();
