@@ -104,26 +104,46 @@ final class Continuation
     }
 
     /**
+     * This will stop the current scope and send a signal to all tasks in order
+     * to terminate.
+     *
+     * @return self<C>
+     */
+    #[\NoDiscard]
+    public function abort(): self
+    {
+        return new self(
+            Next::abort,
+            $this->tasks->clear(),
+            $this->carry,
+        );
+    }
+
+    /**
      * @internal
      * @template T
      * @template U
      * @template V
+     * @template W
      *
      * @param pure-callable(Sequence<callable(OperatingSystem)>, C): T $restart
      * @param pure-callable(Sequence<callable(OperatingSystem)>, C): U $wake
-     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): V $terminate
+     * @param pure-callable(C): V $abort
+     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): W $terminate
      *
-     * @return T|U|V
+     * @return T|U|V|W
      */
     #[\NoDiscard]
     public function match(
         callable $restart,
         callable $wake,
+        callable $abort,
         callable $terminate,
     ): mixed {
         return match ($this->next) {
             Next::restart => $restart($this->tasks, $this->carry),
             Next::wake => $wake($this->tasks, $this->carry),
+            Next::abort => $abort($this->carry),
             Next::terminate => $terminate($this->tasks, $this->carry),
         };
     }

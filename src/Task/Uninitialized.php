@@ -5,8 +5,10 @@ namespace Innmind\Async\Task;
 
 use Innmind\Async\{
     Suspension,
+    Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\Signals\Async\Interceptor;
 
 /**
  * @internal
@@ -18,6 +20,7 @@ final class Uninitialized
      */
     private function __construct(
         private \Closure $task,
+        private Interceptor $interceptor,
     ) {
     }
 
@@ -29,20 +32,29 @@ final class Uninitialized
     #[\NoDiscard]
     public static function of(callable $task): self
     {
+        /** @psalm-suppress ImpureMethodCall Todo fix in innmind/signals */
         return new self(
             \Closure::fromCallable($task),
+            Interceptor::new(),
         );
     }
 
     #[\NoDiscard]
-    public function next(OperatingSystem $async): Suspended|Terminated
-    {
+    public function next(
+        OperatingSystem $sync,
+        Config\Provider $config,
+    ): Suspended|Terminated {
         $fiber = new \Fiber($this->task);
-        $return = Suspension::of($fiber->start($async));
+        $return = Suspension::of($fiber->start(
+            $sync->map($config(
+                $this->interceptor,
+            )),
+        ));
 
         if ($return instanceof Suspension) {
             return Suspended::of(
                 $fiber,
+                $this->interceptor,
                 $return,
             );
         }

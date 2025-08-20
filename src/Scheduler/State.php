@@ -4,9 +4,15 @@ declare(strict_types = 1);
 namespace Innmind\Async\Scheduler;
 
 use Innmind\Async\{
-    Scope,
+    Scope\Uninitialized,
+    Scope\Suspended,
+    Scope\Resumable,
+    Scope\Restartable,
+    Scope\Wakeable,
+    Scope\Aborted,
+    Scope\Terminated,
     Wait,
-    Config\Async as Config,
+    Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
@@ -18,29 +24,29 @@ use Innmind\Immutable\Sequence;
 final class State
 {
     /**
-     * @param Scope\Uninitialized<C>|Scope\Suspended<C>|Scope\Resumable<C>|Scope\Restartable<C>|Scope\Wakeable<C>|Scope\Terminated<C> $scope
+     * @param Uninitialized<C>|Suspended<C>|Resumable<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Terminated<C> $scope
      * @param Sequence<mixed> $results
      */
     private function __construct(
-        private Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
+        private Uninitialized|Suspended|Resumable|Restartable|Wakeable|Aborted|Terminated $scope,
         private Tasks $tasks,
         private Sequence $results,
-        private Config $config,
+        private Config\Provider $config,
     ) {
     }
 
     /**
      * @template A
      *
-     * @param Scope\Uninitialized<A>|Scope\Suspended<A>|Scope\Resumable<A>|Scope\Restartable<A>|Scope\Wakeable<A>|Scope\Terminated<A> $scope
+     * @param Uninitialized<A> $scope
      * @param ?int<2, max> $concurrencyLimit
      *
      * @return self<A>
      */
     #[\NoDiscard]
     public static function new(
-        Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
-        Config $config,
+        Uninitialized $scope,
+        Config\Provider $config,
         ?int $concurrencyLimit,
     ): self {
         return new self(
@@ -73,13 +79,13 @@ final class State
             // scheduling new tasks each time that are suspended upon
             // initialization then it will result in an accumulation of
             // suspended tasks that will fill the process memory.
-        } while ($self->scope instanceof Scope\Restartable);
+        } while ($self->scope instanceof Restartable);
 
         return $self;
     }
 
     /**
-     * @return array{self<C>, ?Scope\Terminated<C>}
+     * @return array{self<C>, Aborted<C>|Terminated<C>|null}
      */
     #[\NoDiscard]
     public function wait(
@@ -87,21 +93,28 @@ final class State
         Wait $wait,
     ): array {
         if (
-            $this->scope instanceof Scope\Terminated &&
+            $this->scope instanceof Terminated &&
             $this->tasks->empty()
         ) {
             return [$this, $this->scope];
         }
 
         if (
-            $this->scope instanceof Scope\Wakeable &&
+            $this->scope instanceof Aborted &&
+            $this->tasks->empty()
+        ) {
+            return [$this, $this->scope];
+        }
+
+        if (
+            $this->scope instanceof Wakeable &&
             $this->tasks->empty() &&
             $this->results->empty()
         ) {
             return [$this, $this->scope->terminate()];
         }
 
-        if ($this->scope instanceof Scope\Suspended) {
+        if ($this->scope instanceof Suspended) {
             $wait = $wait->with($this->scope->suspension());
         }
 
@@ -121,7 +134,7 @@ final class State
 
         $scope = $this->scope;
 
-        if ($scope instanceof Scope\Suspended) {
+        if ($scope instanceof Suspended) {
             $scope = $scope->next($sync->clock(), $result);
         }
 
@@ -142,36 +155,49 @@ final class State
     private function doNext(OperatingSystem $sync): self
     {
         $scope = match (true) {
-            $this->scope instanceof Scope\Uninitialized => $this->scope->next($sync->map($this->config)),
-            $this->scope instanceof Scope\Suspended => $this->scope, // only the wait can advance
-            $this->scope instanceof Scope\Resumable => $this->scope->next(),
-            $this->scope instanceof Scope\Restartable => $this->scope->next(
-                $sync->map($this->config),
+            $this->scope instanceof Uninitialized => $this->scope->next(
+                $sync->map(($this->config)()),
+            ),
+            $this->scope instanceof Suspended => $this->scope, // only the wait can advance
+            $this->scope instanceof Resumable => $this->scope->next(),
+            $this->scope instanceof Restartable => $this->scope->next(
+                $sync->map(($this->config)()),
                 $this->results,
             ),
-            $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
+            $this->scope instanceof Wakeable => match ($this->results->empty()) {
                 true => $this->scope->clear(), // clear tasks otherwise they're infinitely restarted
                 false => $this->scope->next(
-                    $sync->map($this->config),
+                    $sync->map(($this->config)()),
                     $this->results,
                 ),
             },
-            $this->scope instanceof Scope\Terminated => $this->scope->next(),
+            $this->scope instanceof Aborted => $this->scope,
+            $this->scope instanceof Terminated => $this->scope->next(),
         };
         $results = match (true) {
-            $this->scope instanceof Scope\Restartable => $this->results->clear(),
-            $this->scope instanceof Scope\Wakeable => $this->results->clear(),
-            $this->scope instanceof Scope\Terminated => $this->results->clear(),
+            $this->scope instanceof Restartable => $this->results->clear(),
+            $this->scope instanceof Wakeable => $this->results->clear(),
+            $this->scope instanceof Aborted => $this->results->clear(),
+            $this->scope instanceof Terminated => $this->results->clear(),
             default => $this->results,
         };
         $newTasks = match (true) {
-            $scope instanceof Scope\Restartable => $scope->tasks(),
-            $scope instanceof Scope\Wakeable => $scope->tasks(),
-            $scope instanceof Scope\Terminated => $scope->tasks(),
+            $scope instanceof Restartable => $scope->tasks(),
+            $scope instanceof Wakeable => $scope->tasks(),
+            $scope instanceof Terminated => $scope->tasks(),
             default => Sequence::of(),
         };
 
-        [$tasks, $newResults] = $this->tasks->next(
+        $tasks = $this->tasks;
+
+        // We try to abort before advancing tasks as it may start new
+        // unscheduled tasks. This way we prevent starting them and aborting
+        // them right after.
+        if ($scope instanceof Aborted) {
+            $tasks = $tasks->abort();
+        }
+
+        [$tasks, $newResults] = $tasks->next(
             $sync,
             $newTasks,
         );

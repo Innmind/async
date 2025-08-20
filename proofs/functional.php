@@ -6,6 +6,7 @@ use Innmind\Async\{
     Task,
 };
 use Innmind\OperatingSystem\Factory;
+use Innmind\Signals\Signal;
 use Innmind\TimeContinuum\Period;
 use Innmind\Filesystem\Name;
 use Innmind\Http\{
@@ -500,6 +501,62 @@ return static function() {
                     // +1 as the system itself takes a bit of time to run
                     ((int) \ceil($tasks / $max)) + 1,
                 );
+        },
+    );
+
+    yield test(
+        'Abort tasks',
+        static function($assert) {
+            $expect = $assert->time(static function() {
+                // the concurrency limit is here to make sure the remaining 8
+                // tasks won't escape the abortion
+                Scheduler::of(Factory::build())
+                    ->limitConcurrencyTo(2)
+                    ->sink(false)
+                    ->with(
+                        static function($started, $os, $continuation) {
+                            if (!$started) {
+                                return $continuation
+                                    ->carryWith(true)
+                                    ->schedule(Sequence::of()->pad(
+                                        10,
+                                        static function($os) {
+                                            $continue = true;
+                                            $os
+                                                ->process()
+                                                ->signals()
+                                                ->listen(
+                                                    Signal::terminate,
+                                                    static function() use (&$continue) {
+                                                        $continue = false;
+                                                    },
+                                                );
+
+                                            while ($continue) {
+                                                $os
+                                                    ->process()
+                                                    ->halt(Period::second(2))
+                                                    ->unwrap();
+                                            }
+                                        },
+                                    ));
+                            }
+
+                            $os
+                                ->process()
+                                ->halt(Period::second(1))
+                                ->unwrap();
+
+                            return $continuation->abort();
+                        },
+                    );
+            });
+            $expect
+                ->inLessThan()
+                ->seconds(3);
+            $expect
+                ->inMoreThan()
+                ->seconds(1);
         },
     );
 };

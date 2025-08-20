@@ -116,10 +116,6 @@ When the scope calls `->terminate()` and that all tasks are finished then `->wit
 
 ## Limitations
 
-### Signals
-
-Signals like `SIGINT`, `SIGTERM`, etc... that are normally handled via `$os->process()->signals()` is not yet supported. This may result in unwanted behaviours.
-
 ### HTTP calls
 
 Currently HTTP calls are done via `curl` but it can't be integrated in the same loop as other streams. To allow the coordination of multiple tasks when doing HTTP calls the system use a timeout of `10ms` and switches between tasks at this max rate.
