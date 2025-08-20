@@ -6,7 +6,7 @@ namespace Innmind\Async\Scheduler;
 use Innmind\Async\{
     Scope,
     Wait,
-    Config\Async as Config,
+    Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
@@ -25,7 +25,7 @@ final class State
         private Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
         private Tasks $tasks,
         private Sequence $results,
-        private Config $config,
+        private Config\Provider $config,
     ) {
     }
 
@@ -40,7 +40,7 @@ final class State
     #[\NoDiscard]
     public static function new(
         Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
-        Config $config,
+        Config\Provider $config,
         ?int $concurrencyLimit,
     ): self {
         return new self(
@@ -142,17 +142,19 @@ final class State
     private function doNext(OperatingSystem $sync): self
     {
         $scope = match (true) {
-            $this->scope instanceof Scope\Uninitialized => $this->scope->next($sync->map($this->config)),
+            $this->scope instanceof Scope\Uninitialized => $this->scope->next(
+                $sync->map(($this->config)()),
+            ),
             $this->scope instanceof Scope\Suspended => $this->scope, // only the wait can advance
             $this->scope instanceof Scope\Resumable => $this->scope->next(),
             $this->scope instanceof Scope\Restartable => $this->scope->next(
-                $sync->map($this->config),
+                $sync->map(($this->config)()),
                 $this->results,
             ),
             $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
                 true => $this->scope->clear(), // clear tasks otherwise they're infinitely restarted
                 false => $this->scope->next(
-                    $sync->map($this->config),
+                    $sync->map(($this->config)()),
                     $this->results,
                 ),
             },

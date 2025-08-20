@@ -7,7 +7,7 @@ use Innmind\Async\{
     Scope,
     Scope\Continuation,
     Wait,
-    Config\Async as Config,
+    Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
@@ -61,7 +61,7 @@ final class Sink
                 $scope,
                 $this->carry,
             ),
-            Config::of($this->sync->clock()),
+            Config\Provider::of($this->sync->clock()),
             $this->concurrencyLimit,
         );
 

@@ -7,7 +7,7 @@ use Innmind\Async\{
     Task,
     Wait,
     Suspension,
-    Config\Async as Config,
+    Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\{
@@ -28,7 +28,7 @@ final class Tasks
      * @param Sequence<callable(OperatingSystem)> $unscheduled
      */
     private function __construct(
-        private Config $config,
+        private Config\Provider $config,
         private ?int $concurrencyLimit,
         private Sequence $suspended,
         private Sequence $resumable,
@@ -42,7 +42,7 @@ final class Tasks
      * @param ?int<2, max> $concurrencyLimit
      */
     #[\NoDiscard]
-    public static function none(Config $config, ?int $concurrencyLimit): self
+    public static function none(Config\Provider $config, ?int $concurrencyLimit): self
     {
         return new self(
             $config,
@@ -87,7 +87,9 @@ final class Tasks
             ->append(
                 $new
                     ->map(Task\Uninitialized::of(...))
-                    ->map(fn($task) => $task->next($sync->map($this->config))),
+                    ->map(fn($task) => $task->next(
+                        $sync->map(($this->config)()),
+                    )),
             );
         $results = $tasks
             ->keep(Instance::of(Task\Terminated::class))

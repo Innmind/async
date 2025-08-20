@@ -16,10 +16,11 @@
     },
     "require": {
         "php": "~8.2",
-        "innmind/operating-system": "~6.1",
+        "innmind/operating-system": "~6.2",
         "innmind/immutable": "~5.18",
         "innmind/io": "^3.5.1",
-        "innmind/time-warp": "^4.1.1"
+        "innmind/time-warp": "^4.1.1",
+        "innmind/signals": "~4.1"
     },
     "autoload": {
         "psr-4": {

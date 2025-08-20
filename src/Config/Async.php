@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace Innmind\Async\Config;
 
 use Innmind\OperatingSystem\Config;
+use Innmind\Signals\Async\Interceptor;
 use Innmind\TimeContinuum\{
     Clock,
     Period,
@@ -17,8 +18,12 @@ use Innmind\IO\IO;
  */
 final class Async
 {
+    /**
+     * @psalm-mutation-free
+     */
     private function __construct(
         private Clock $clock,
+        private ?Interceptor $interceptor,
     ) {
     }
 
@@ -37,16 +42,22 @@ final class Async
                 Period::millisecond(10), // this is blocking the active task so it needs to be low
                 static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
             );
-        // todo handle process signals
+        $signals = $config
+            ->signalsHandler()
+            ->async($this->interceptor);
 
         return $config
             ->haltProcessVia($halt)
             ->useHttpTransport($http)
-            ->withIO($io);
+            ->withIO($io)
+            ->handleSignalsVia($signals);
     }
 
-    public static function of(Clock $clock): self
+    /**
+     * @psalm-pure
+     */
+    public static function of(Clock $clock, ?Interceptor $interceptor): self
     {
-        return new self($clock);
+        return new self($clock, $interceptor);
     }
 }
