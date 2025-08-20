@@ -22,12 +22,13 @@ use Innmind\Immutable\{
 final class Tasks
 {
     /**
-     * @param Sequence<Task\Suspended|Task\Resumable> $running
+     * @param Sequence<Task\Suspended> $suspended
+     * @param Sequence<Task\Resumable> $resumable
      */
     private function __construct(
         private Config $config,
-        private Sequence $running,
-        // todo split between suspended and resumable
+        private Sequence $suspended,
+        private Sequence $resumable,
     ) {
     }
 
@@ -39,12 +40,13 @@ final class Tasks
         return new self(
             $config,
             Sequence::of(),
+            Sequence::of(),
         );
     }
 
     public function empty(): bool
     {
-        return $this->running->empty();
+        return $this->suspended->empty() && $this->resumable->empty();
     }
 
     /**
@@ -64,12 +66,10 @@ final class Tasks
         // existing tasks about to finish.
         // The end result is the same but this way it should have the lowest
         // memory footprint.
+        // Suspended tasks can only be advanced in the wait
         $tasks = $this
-            ->running
-            ->map(static fn($task) => match (true) {
-                $task instanceof Task\Suspended => $task,  // only the wait can advance
-                $task instanceof Task\Resumable => $task->next(),
-            })
+            ->resumable
+            ->map(static fn($task) => $task->next())
             ->append(
                 $new
                     ->map(Task\Uninitialized::of(...))
@@ -79,16 +79,14 @@ final class Tasks
             ->keep(Instance::of(Task\Terminated::class))
             ->map(static fn($task): mixed => $task->returned())
             ->exclude(static fn($value) => $value === Task\Discard::result);
-        $tasks = $tasks->keep(
-            Instance::of(Task\Suspended::class)->or(
-                Instance::of(Task\Resumable::class),
-            ),
-        );
 
         return [
             new self(
                 $this->config,
-                $tasks,
+                $this->suspended->append(
+                    $tasks->keep(Instance::of(Task\Suspended::class)),
+                ),
+                $tasks->keep(Instance::of(Task\Resumable::class)),
             ),
             $results,
         ];
@@ -99,32 +97,28 @@ final class Tasks
      */
     public function suspensions(): Sequence
     {
-        return $this
-            ->running
-            ->keep(Instance::of(Task\Suspended::class))
-            ->map(static fn($task) => $task->suspension());
+        return $this->suspended->map(
+            static fn($task) => $task->suspension(),
+        );
     }
 
     public function awaited(
         OperatingSystem $sync,
         Wait\IO|Wait\Time $result,
     ): self {
-        $suspended = $this->running->keep(Instance::of(Task\Suspended::class));
+        $tasks = $this->suspended->map(
+            static fn($task) => $task->next(
+                $sync->clock(),
+                $result,
+            ),
+        );
 
         return new self(
             $this->config,
-            $this
-                ->running
-                ->keep(Instance::of(Task\Suspended::class))
-                ->map(static fn($task) => $task->next(
-                    $sync->clock(),
-                    $result,
-                ))
-                ->prepend(
-                    $this
-                        ->running
-                        ->keep(Instance::of(Task\Resumable::class)),
-                ),
+            $tasks->keep(Instance::of(Task\Suspended::class)),
+            $this->resumable->append(
+                $tasks->keep(Instance::of(Task\Resumable::class)),
+            ),
         );
     }
 }
