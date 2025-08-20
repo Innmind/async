@@ -42,10 +42,10 @@ final class Uninitialized
     }
 
     /**
-     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Terminated<C>
+     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Finished<C>
      */
     #[\NoDiscard]
-    public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Aborted|Terminated
+    public function next(OperatingSystem $async): Suspended|Restartable|Wakeable|Aborted|Finished
     {
         $fiber = $this->scope->new();
         $return = Suspension::of($fiber->start(
@@ -70,7 +70,7 @@ final class Uninitialized
             Restartable::of($this->scope),
             Wakeable::of($this->scope),
             Aborted::of(...),
-            Terminated::of(...),
+            Finished::of(...),
         );
     }
 }

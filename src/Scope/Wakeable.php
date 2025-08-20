@@ -51,13 +51,13 @@ final class Wakeable
     /**
      * @param Sequence<mixed> $results
      *
-     * @return Suspended<C>|Restartable<C>|self<C>|Aborted<C>|Terminated<C>
+     * @return Suspended<C>|Restartable<C>|self<C>|Aborted<C>|Finished<C>
      */
     #[\NoDiscard]
     public function next(
         OperatingSystem $async,
         Sequence $results,
-    ): Suspended|Restartable|self|Aborted|Terminated {
+    ): Suspended|Restartable|self|Aborted|Finished {
         $fiber = $this->scope->new();
         $return = Suspension::of($fiber->start(
             $this->carry,
@@ -81,7 +81,7 @@ final class Wakeable
             Restartable::of($this->scope),
             self::of($this->scope),
             Aborted::of(...),
-            Terminated::of(...),
+            Finished::of(...),
         );
     }
 
@@ -98,12 +98,12 @@ final class Wakeable
     }
 
     /**
-     * @return Terminated<C>
+     * @return Finished<C>
      */
     #[\NoDiscard]
-    public function terminate(): Terminated
+    public function finish(): Finished
     {
-        return Terminated::of(
+        return Finished::of(
             $this->tasks->clear(),
             $this->carry,
         );

@@ -10,7 +10,7 @@ use Innmind\Async\{
     Scope\Restartable,
     Scope\Wakeable,
     Scope\Aborted,
-    Scope\Terminated,
+    Scope\Finished,
     Wait,
     Config,
 };
@@ -24,11 +24,11 @@ use Innmind\Immutable\Sequence;
 final class State
 {
     /**
-     * @param Uninitialized<C>|Suspended<C>|Resumable<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Terminated<C> $scope
+     * @param Uninitialized<C>|Suspended<C>|Resumable<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Finished<C> $scope
      * @param Sequence<mixed> $results
      */
     private function __construct(
-        private Uninitialized|Suspended|Resumable|Restartable|Wakeable|Aborted|Terminated $scope,
+        private Uninitialized|Suspended|Resumable|Restartable|Wakeable|Aborted|Finished $scope,
         private Tasks $tasks,
         private Sequence $results,
         private Config\Provider $config,
@@ -85,7 +85,7 @@ final class State
     }
 
     /**
-     * @return array{self<C>, Aborted<C>|Terminated<C>|null}
+     * @return array{self<C>, Aborted<C>|Finished<C>|null}
      */
     #[\NoDiscard]
     public function wait(
@@ -93,7 +93,7 @@ final class State
         Wait $wait,
     ): array {
         if (
-            $this->scope instanceof Terminated &&
+            $this->scope instanceof Finished &&
             $this->tasks->empty()
         ) {
             return [$this, $this->scope];
@@ -111,7 +111,7 @@ final class State
             $this->tasks->empty() &&
             $this->results->empty()
         ) {
-            return [$this, $this->scope->terminate()];
+            return [$this, $this->scope->finish()];
         }
 
         if ($this->scope instanceof Suspended) {
@@ -172,19 +172,19 @@ final class State
                 ),
             },
             $this->scope instanceof Aborted => $this->scope,
-            $this->scope instanceof Terminated => $this->scope->next(),
+            $this->scope instanceof Finished => $this->scope->next(),
         };
         $results = match (true) {
             $this->scope instanceof Restartable => $this->results->clear(),
             $this->scope instanceof Wakeable => $this->results->clear(),
             $this->scope instanceof Aborted => $this->results->clear(),
-            $this->scope instanceof Terminated => $this->results->clear(),
+            $this->scope instanceof Finished => $this->results->clear(),
             default => $this->results,
         };
         $newTasks = match (true) {
             $scope instanceof Restartable => $scope->tasks(),
             $scope instanceof Wakeable => $scope->tasks(),
-            $scope instanceof Terminated => $scope->tasks(),
+            $scope instanceof Finished => $scope->tasks(),
             default => Sequence::of(),
         };
 

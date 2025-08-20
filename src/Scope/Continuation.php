@@ -81,10 +81,10 @@ final class Continuation
      * @return self<C>
      */
     #[\NoDiscard]
-    public function terminate(): self
+    public function finish(): self
     {
         return new self(
-            Next::terminate,
+            Next::finish,
             $this->tasks,
             $this->carry,
         );
@@ -129,7 +129,7 @@ final class Continuation
      * @param pure-callable(Sequence<callable(OperatingSystem)>, C): T $restart
      * @param pure-callable(Sequence<callable(OperatingSystem)>, C): U $wake
      * @param pure-callable(C): V $abort
-     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): W $terminate
+     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): W $finish
      *
      * @return T|U|V|W
      */
@@ -138,13 +138,13 @@ final class Continuation
         callable $restart,
         callable $wake,
         callable $abort,
-        callable $terminate,
+        callable $finish,
     ): mixed {
         return match ($this->next) {
             Next::restart => $restart($this->tasks, $this->carry),
             Next::wake => $wake($this->tasks, $this->carry),
             Next::abort => $abort($this->carry),
-            Next::terminate => $terminate($this->tasks, $this->carry),
+            Next::finish => $finish($this->tasks, $this->carry),
         };
     }
 }

@@ -13,7 +13,7 @@ use Innmind\Immutable\Sequence;
  * @psalm-immutable
  * @template C
  */
-final class Terminated
+final class Finished
 {
     /**
      * @param Sequence<callable(OperatingSystem)> $tasks
