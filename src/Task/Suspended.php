@@ -7,6 +7,7 @@ use Innmind\Async\{
     Suspension,
     Wait,
 };
+use Innmind\Signals\Async\Interceptor;
 use Innmind\TimeContinuum\Clock;
 
 /**
@@ -21,6 +22,7 @@ final class Suspended
      */
     private function __construct(
         private \Fiber $fiber,
+        private Interceptor $interceptor,
         private Suspension $suspension,
     ) {
     }
@@ -29,9 +31,16 @@ final class Suspended
      * @psalm-pure
      */
     #[\NoDiscard]
-    public static function of(\Fiber $fiber, Suspension $suspension): self
-    {
-        return new self($fiber, $suspension);
+    public static function of(
+        \Fiber $fiber,
+        Interceptor $interceptor,
+        Suspension $suspension,
+    ): self {
+        return new self(
+            $fiber,
+            $interceptor,
+            $suspension,
+        );
     }
 
     #[\NoDiscard]
@@ -47,11 +56,16 @@ final class Suspended
         if ($next instanceof Suspension) {
             return new self(
                 $this->fiber,
+                $this->interceptor,
                 $next,
             );
         }
 
-        return Resumable::of($this->fiber, $next);
+        return Resumable::of(
+            $this->fiber,
+            $this->interceptor,
+            $next,
+        );
     }
 
     /**

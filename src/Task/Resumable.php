@@ -7,6 +7,7 @@ use Innmind\Async\{
     Suspension,
     Resumption,
 };
+use Innmind\Signals\Async\Interceptor;
 
 /**
  * IO is ready or halt is finished
@@ -20,6 +21,7 @@ final class Resumable
      */
     private function __construct(
         private \Fiber $fiber,
+        private Interceptor $interceptor,
         private Resumption $resumption,
     ) {
     }
@@ -28,9 +30,16 @@ final class Resumable
      * @psalm-pure
      */
     #[\NoDiscard]
-    public static function of(\Fiber $fiber, Resumption $resumption): self
-    {
-        return new self($fiber, $resumption);
+    public static function of(
+        \Fiber $fiber,
+        Interceptor $interceptor,
+        Resumption $resumption,
+    ): self {
+        return new self(
+            $fiber,
+            $interceptor,
+            $resumption,
+        );
     }
 
     #[\NoDiscard]
@@ -43,6 +52,7 @@ final class Resumable
         if ($return instanceof Suspension) {
             return Suspended::of(
                 $this->fiber,
+                $this->interceptor,
                 $return,
             );
         }

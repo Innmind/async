@@ -88,7 +88,8 @@ final class Tasks
                 $new
                     ->map(Task\Uninitialized::of(...))
                     ->map(fn($task) => $task->next(
-                        $sync->map(($this->config)()),
+                        $sync,
+                        $this->config,
                     )),
             );
         $results = $tasks
