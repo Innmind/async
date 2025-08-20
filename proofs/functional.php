@@ -468,4 +468,38 @@ return static function() {
             $assert->count(0, $results);
         },
     );
+
+    yield proof(
+        'Limit concurrency',
+        given(
+            Set::integers()->between(2, 10),
+            Set::integers()->between(2, 10),
+        ),
+        static function($assert, $tasks, $max) {
+            $assert
+                ->time(static function() use ($tasks, $max) {
+                    Scheduler::of(Factory::build())
+                        ->limitConcurrencyTo($max)
+                        ->sink(null)
+                        ->with(
+                            static fn($_, $__, $continuation) => $continuation
+                                ->schedule(
+                                    Sequence::of()->pad(
+                                        $tasks,
+                                        static fn($os) => $os
+                                            ->process()
+                                            ->halt(Period::second(1))
+                                            ->unwrap(),
+                                    ),
+                                )
+                                ->terminate(),
+                        );
+                })
+                ->inLessThan()
+                ->seconds(
+                    // +1 as the system itself takes a bit of time to run
+                    ((int) \ceil($tasks / $max)) + 1,
+                );
+        },
+    );
 };

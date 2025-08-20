@@ -23,6 +23,8 @@ final class Uninitialized
 
     /**
      * @psalm-pure
+     *
+     * @param callable(OperatingSystem) $task
      */
     #[\NoDiscard]
     public static function of(callable $task): self

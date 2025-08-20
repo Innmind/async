@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace Innmind\Async\Scope;
 
 use Innmind\Async\Scope\Continuation\Next;
+use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
 
 /**
@@ -13,7 +14,7 @@ use Innmind\Immutable\Sequence;
 final class Continuation
 {
     /**
-     * @param Sequence<callable> $tasks
+     * @param Sequence<callable(OperatingSystem)> $tasks
      * @param C $carry
      */
     private function __construct(
@@ -58,7 +59,7 @@ final class Continuation
     }
 
     /**
-     * @param Sequence<callable> $tasks
+     * @param Sequence<callable(OperatingSystem)> $tasks
      *
      * @return self<C>
      */
@@ -108,9 +109,9 @@ final class Continuation
      * @template U
      * @template V
      *
-     * @param pure-callable(Sequence<callable>, C): T $restart
-     * @param pure-callable(Sequence<callable>, C): U $wake
-     * @param pure-callable(Sequence<callable>, C): V $terminate
+     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): T $restart
+     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): U $wake
+     * @param pure-callable(Sequence<callable(OperatingSystem)>, C): V $terminate
      *
      * @return T|U|V
      */
