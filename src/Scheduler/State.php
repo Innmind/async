@@ -5,15 +5,11 @@ namespace Innmind\Async\Scheduler;
 
 use Innmind\Async\{
     Scope,
-    Task,
     Wait,
     Config\Async as Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\Immutable\{
-    Sequence,
-    Predicate\Instance,
-};
+use Innmind\Immutable\Sequence;
 
 /**
  * @internal
@@ -23,12 +19,11 @@ final class State
 {
     /**
      * @param Scope\Uninitialized<C>|Scope\Suspended<C>|Scope\Resumable<C>|Scope\Restartable<C>|Scope\Wakeable<C>|Scope\Terminated<C> $scope
-     * @param Sequence<Task\Suspended|Task\Resumable> $tasks
      * @param Sequence<mixed> $results
      */
     private function __construct(
         private Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
-        private Sequence $tasks,
+        private Tasks $tasks,
         private Sequence $results,
         private Config $config,
     ) {
@@ -48,7 +43,7 @@ final class State
     ): self {
         return new self(
             $scope,
-            Sequence::of(),
+            Tasks::none($config),
             Sequence::of(),
             $config,
         );
@@ -108,11 +103,13 @@ final class State
             $wait = $wait->with($this->scope->suspension());
         }
 
-        $suspended = $this->tasks->keep(Instance::of(Task\Suspended::class));
-        $wait = $suspended->reduce(
-            $wait,
-            static fn(Wait $wait, $task) => $wait->with($task->suspension()),
-        );
+        $wait = $this
+            ->tasks
+            ->suspensions()
+            ->reduce(
+                $wait,
+                static fn(Wait $wait, $suspension) => $wait->with($suspension),
+            );
 
         $result = $wait($sync);
 
@@ -121,7 +118,6 @@ final class State
         }
 
         $scope = $this->scope;
-        $resumable = $this->tasks->keep(Instance::of(Task\Resumable::class));
 
         if ($scope instanceof Scope\Suspended) {
             $scope = $scope->next($sync->clock(), $result);
@@ -130,12 +126,7 @@ final class State
         return [
             new self(
                 $scope,
-                $suspended
-                    ->map(static fn($task) => $task->next(
-                        $sync->clock(),
-                        $result,
-                    ))
-                    ->prepend($resumable),
+                $this->tasks->awaited($sync, $result),
                 $this->results,
                 $this->config,
             ),
@@ -171,48 +162,22 @@ final class State
             $this->scope instanceof Scope\Terminated => $this->results->clear(),
             default => $this->results,
         };
-        $tasks = match (true) {
+        $newTasks = match (true) {
             $scope instanceof Scope\Restartable => $scope->tasks(),
             $scope instanceof Scope\Wakeable => $scope->tasks(),
             $scope instanceof Scope\Terminated => $scope->tasks(),
             default => Sequence::of(),
         };
 
-        // The new tasks are appended after in order to prioritize finishing
-        // existing tasks. If exisiting ones can be finished in this iteration
-        // then it allows to free memory early.
-        // If the new tasks would be prioritized then it would need to allocate
-        // new memory to start these tasks and eventually then free memory for
-        // existing tasks about to finish.
-        // The end result is the same but this way it should have the lowest
-        // memory footprint.
-        $tasks = $this
-            ->tasks
-            ->map(static fn($task) => match (true) {
-                $task instanceof Task\Suspended => $task, // only the wait can advance
-                $task instanceof Task\Resumable => $task->next(),
-            })
-            ->append(
-                $tasks
-                    ->map(Task\Uninitialized::of(...))
-                    ->map(fn($task) => $task->next($sync->map($this->config))),
-            );
-        $results = $results->append(
-            $tasks
-                ->keep(Instance::of(Task\Terminated::class))
-                ->map(static fn($task): mixed => $task->returned())
-                ->exclude(static fn($value) => $value === Task\Discard::result),
-        );
-        $tasks = $tasks->keep(
-            Instance::of(Task\Suspended::class)->or(
-                Instance::of(Task\Resumable::class),
-            ),
+        [$tasks, $newResults] = $this->tasks->next(
+            $sync,
+            $newTasks,
         );
 
         return new self(
             $scope,
             $tasks,
-            $results,
+            $results->append($newResults),
             $this->config,
         );
     }
