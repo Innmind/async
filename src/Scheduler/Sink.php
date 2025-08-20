@@ -7,6 +7,7 @@ use Innmind\Async\{
     Scope,
     Scope\Continuation,
     Wait,
+    Config\Async as Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
 use Innmind\Immutable\Sequence;
@@ -51,10 +52,13 @@ final class Sink
      */
     public function with(callable $scope): mixed
     {
-        $state = State::new(Scope::of(
-            $scope,
-            $this->carry,
-        ));
+        $state = State::new(
+            Scope::of(
+                $scope,
+                $this->carry,
+            ),
+            Config::of($this->sync->clock()),
+        );
 
         do {
             [$state, $terminated] = $state

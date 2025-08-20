@@ -7,12 +7,9 @@ use Innmind\Async\{
     Scope,
     Task,
     Wait,
+    Config\Async as Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\HttpTransport\Curl;
-use Innmind\TimeWarp\Halt;
-use Innmind\TimeContinuum\Period;
-use Innmind\IO\IO;
 use Innmind\Immutable\{
     Sequence,
     Predicate\Instance,
@@ -33,6 +30,7 @@ final class State
         private Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
         private Sequence $tasks,
         private Sequence $results,
+        private Config $config,
     ) {
     }
 
@@ -46,11 +44,13 @@ final class State
     #[\NoDiscard]
     public static function new(
         Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
+        Config $config,
     ): self {
         return new self(
             $scope,
             Sequence::of(),
             Sequence::of(),
+            $config,
         );
     }
 
@@ -137,6 +137,7 @@ final class State
                     ))
                     ->prepend($resumable),
                 $this->results,
+                $this->config,
             ),
             null,
         ];
@@ -148,17 +149,17 @@ final class State
     private function doNext(OperatingSystem $sync): self
     {
         $scope = match (true) {
-            $this->scope instanceof Scope\Uninitialized => $this->scope->next($this->async($sync)),
+            $this->scope instanceof Scope\Uninitialized => $this->scope->next($sync->map($this->config)),
             $this->scope instanceof Scope\Suspended => $this->scope, // only the wait can advance
             $this->scope instanceof Scope\Resumable => $this->scope->next(),
             $this->scope instanceof Scope\Restartable => $this->scope->next(
-                $this->async($sync),
+                $sync->map($this->config),
                 $this->results,
             ),
             $this->scope instanceof Scope\Wakeable => match ($this->results->empty()) {
                 true => $this->scope->clear(), // clear tasks otherwise they're infinitely restarted
                 false => $this->scope->next(
-                    $this->async($sync),
+                    $sync->map($this->config),
                     $this->results,
                 ),
             },
@@ -194,7 +195,7 @@ final class State
             ->append(
                 $tasks
                     ->map(Task\Uninitialized::of(...))
-                    ->map(fn($task) => $task->next($this->async($sync))),
+                    ->map(fn($task) => $task->next($sync->map($this->config))),
             );
         $results = $results->append(
             $tasks
@@ -212,31 +213,7 @@ final class State
             $scope,
             $tasks,
             $results,
-        );
-    }
-
-    private function async(OperatingSystem $sync): OperatingSystem
-    {
-        $halt = Halt\Async::of($sync->clock());
-        $io = IO::async($sync->clock());
-        // todo handle max concurrency + ssl configuration
-        // todo build a native client based on innmind/io to better integrate in
-        // this system.
-        $http = Curl::of(
-            $sync->clock(),
-            $io,
-        )
-            ->heartbeat(
-                Period::millisecond(10), // this is blocking the active task so it needs to be low
-                static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
-            );
-        // todo handle process signals
-
-        return $sync->map(
-            static fn($config) => $config
-                ->haltProcessVia($halt)
-                ->useHttpTransport($http)
-                ->withIO($io),
+            $this->config,
         );
     }
 }
