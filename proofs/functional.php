@@ -558,5 +558,5 @@ return static function() {
                 ->inMoreThan()
                 ->seconds(1);
         },
-    )->tag(Innmind\BlackBox\Tag::wip);
+    );
 };
