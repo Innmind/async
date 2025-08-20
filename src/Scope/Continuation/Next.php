@@ -11,5 +11,6 @@ enum Next
 {
     case restart;
     case wake;
+    case abort;
     case terminate;
 }

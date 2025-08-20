@@ -7,7 +7,10 @@ use Innmind\Async\{
     Suspension,
     Wait,
 };
-use Innmind\Signals\Async\Interceptor;
+use Innmind\Signals\{
+    Async\Interceptor,
+    Signal,
+};
 use Innmind\TimeContinuum\Clock;
 
 /**
@@ -66,6 +69,11 @@ final class Suspended
             $this->interceptor,
             $next,
         );
+    }
+
+    public function signal(Signal $signal): void
+    {
+        $this->interceptor->dispatch($signal);
     }
 
     /**

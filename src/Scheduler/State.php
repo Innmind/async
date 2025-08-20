@@ -18,11 +18,11 @@ use Innmind\Immutable\Sequence;
 final class State
 {
     /**
-     * @param Scope\Uninitialized<C>|Scope\Suspended<C>|Scope\Resumable<C>|Scope\Restartable<C>|Scope\Wakeable<C>|Scope\Terminated<C> $scope
+     * @param Scope\Uninitialized<C>|Scope\Suspended<C>|Scope\Resumable<C>|Scope\Restartable<C>|Scope\Wakeable<C>|Scope\Aborted<C>|Scope\Terminated<C> $scope
      * @param Sequence<mixed> $results
      */
     private function __construct(
-        private Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
+        private Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Aborted|Scope\Terminated $scope,
         private Tasks $tasks,
         private Sequence $results,
         private Config\Provider $config,
@@ -32,14 +32,14 @@ final class State
     /**
      * @template A
      *
-     * @param Scope\Uninitialized<A>|Scope\Suspended<A>|Scope\Resumable<A>|Scope\Restartable<A>|Scope\Wakeable<A>|Scope\Terminated<A> $scope
+     * @param Scope\Uninitialized<A> $scope
      * @param ?int<2, max> $concurrencyLimit
      *
      * @return self<A>
      */
     #[\NoDiscard]
     public static function new(
-        Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
+        Scope\Uninitialized $scope,
         Config\Provider $config,
         ?int $concurrencyLimit,
     ): self {
@@ -79,7 +79,7 @@ final class State
     }
 
     /**
-     * @return array{self<C>, ?Scope\Terminated<C>}
+     * @return array{self<C>, Scope\Aborted<C>|Scope\Terminated<C>|null}
      */
     #[\NoDiscard]
     public function wait(
@@ -88,6 +88,13 @@ final class State
     ): array {
         if (
             $this->scope instanceof Scope\Terminated &&
+            $this->tasks->empty()
+        ) {
+            return [$this, $this->scope];
+        }
+
+        if (
+            $this->scope instanceof Scope\Aborted &&
             $this->tasks->empty()
         ) {
             return [$this, $this->scope];
@@ -158,11 +165,13 @@ final class State
                     $this->results,
                 ),
             },
+            $this->scope instanceof Scope\Aborted => $this->scope,
             $this->scope instanceof Scope\Terminated => $this->scope->next(),
         };
         $results = match (true) {
             $this->scope instanceof Scope\Restartable => $this->results->clear(),
             $this->scope instanceof Scope\Wakeable => $this->results->clear(),
+            $this->scope instanceof Scope\Aborted => $this->results->clear(),
             $this->scope instanceof Scope\Terminated => $this->results->clear(),
             default => $this->results,
         };
@@ -173,7 +182,16 @@ final class State
             default => Sequence::of(),
         };
 
-        [$tasks, $newResults] = $this->tasks->next(
+        $tasks = $this->tasks;
+
+        // We try to abort before advancing tasks as it may start new
+        // unscheduled tasks. This way we prevent starting them and aborting
+        // them right after.
+        if ($scope instanceof Scope\Aborted) {
+            $tasks = $tasks->abort();
+        }
+
+        [$tasks, $newResults] = $tasks->next(
             $sync,
             $newTasks,
         );

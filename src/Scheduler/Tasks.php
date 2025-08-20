@@ -10,6 +10,7 @@ use Innmind\Async\{
     Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
+use Innmind\Signals\Signal;
 use Innmind\Immutable\{
     Sequence,
     Predicate\Instance,
@@ -142,6 +143,27 @@ final class Tasks
                 $tasks->keep(Instance::of(Task\Resumable::class)),
             ),
             $this->unscheduled,
+        );
+    }
+
+    #[\NoDiscard]
+    public function abort(): self
+    {
+        // This is not ideal to not return a new version of tasks but it is a
+        // mutating call after all 🤷‍♂️
+        $_ = $this->suspended->foreach(
+            static fn($task) => $task->signal(Signal::terminate),
+        );
+        $_ = $this->resumable->foreach(
+            static fn($task) => $task->signal(Signal::terminate),
+        );
+
+        return new self(
+            $this->config,
+            $this->concurrencyLimit,
+            $this->suspended,
+            $this->resumable,
+            $this->unscheduled->clear(),
         );
     }
 

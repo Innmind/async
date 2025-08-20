@@ -7,7 +7,10 @@ use Innmind\Async\{
     Suspension,
     Resumption,
 };
-use Innmind\Signals\Async\Interceptor;
+use Innmind\Signals\{
+    Async\Interceptor,
+    Signal,
+};
 
 /**
  * IO is ready or halt is finished
@@ -58,5 +61,10 @@ final class Resumable
         }
 
         return Terminated::of($this->fiber->getReturn());
+    }
+
+    public function signal(Signal $signal): void
+    {
+        $this->interceptor->dispatch($signal);
     }
 }
