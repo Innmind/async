@@ -3,11 +3,8 @@ declare(strict_types = 1);
 
 namespace Innmind\Async\Scope;
 
-use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\Immutable\Sequence;
-
 /**
- * Scope call has finished and should be disposed
+ * Scope asked to abort all tasks and will wait for them to finish
  *
  * @internal
  * @psalm-immutable
@@ -16,11 +13,9 @@ use Innmind\Immutable\Sequence;
 final class Terminated
 {
     /**
-     * @param Sequence<callable(OperatingSystem)> $tasks
      * @param C $carry
      */
     private function __construct(
-        private Sequence $tasks,
         private mixed $carry,
     ) {
     }
@@ -29,38 +24,14 @@ final class Terminated
      * @psalm-pure
      * @template A
      *
-     * @param Sequence<callable(OperatingSystem)> $tasks
      * @param A $carry
      *
      * @return self<A>
      */
     #[\NoDiscard]
-    public static function of(
-        Sequence $tasks,
-        mixed $carry,
-    ): self {
-        return new self($tasks, $carry);
-    }
-
-    /**
-     * @return self<C>
-     */
-    #[\NoDiscard]
-    public function next(): self
+    public static function of(mixed $carry): self
     {
-        return new self(
-            $this->tasks->clear(),
-            $this->carry,
-        );
-    }
-
-    /**
-     * @return Sequence<callable(OperatingSystem)>
-     */
-    #[\NoDiscard]
-    public function tasks(): Sequence
-    {
-        return $this->tasks;
+        return new self($carry);
     }
 
     /**

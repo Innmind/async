@@ -35,7 +35,7 @@ return static function() {
                                 static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
                                 static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
                             ))
-                            ->terminate(),
+                            ->finish(),
                     );
             });
             $expect
@@ -56,7 +56,7 @@ return static function() {
         static function($assert, $initial, $modified) {
             $returned = Scheduler::of(Factory::build())
                 ->sink($initial)
-                ->with(static fn($_, $__, $continuation) => $continuation->terminate());
+                ->with(static fn($_, $__, $continuation) => $continuation->finish());
             $assert->same($initial, $returned);
 
             $returned = Scheduler::of(Factory::build())
@@ -64,7 +64,7 @@ return static function() {
                 ->with(
                     static fn($carry, $__, $continuation) => $continuation
                         ->carryWith($initial)
-                        ->terminate(),
+                        ->finish(),
                 );
             $assert->same($initial, $returned);
 
@@ -73,7 +73,7 @@ return static function() {
                 ->with(
                     static fn($carry, $__, $continuation) => $continuation
                         ->carryWith($modified)
-                        ->terminate(),
+                        ->finish(),
                 );
             $assert->same($modified, $returned);
         },
@@ -131,7 +131,7 @@ return static function() {
 
                                 return $continuation;
                             })($os, $continuation),
-                            default => $continuation->terminate(),
+                            default => $continuation->finish(),
                         },
                     );
             });
@@ -160,7 +160,7 @@ return static function() {
                                     ->unwrap();
                                 $results[] = 'scope';
 
-                                return $continuation->terminate();
+                                return $continuation->finish();
                             }
 
                             return $continuation
@@ -220,7 +220,7 @@ return static function() {
                                     ->unwrap();
                                 $results[] = 'scope';
 
-                                return $continuation->terminate();
+                                return $continuation->finish();
                             }
 
                             return $continuation
@@ -326,7 +326,7 @@ return static function() {
                                         );
                                 },
                             ))
-                            ->terminate();
+                            ->finish();
                     },
                 );
             $assert->same(
@@ -387,7 +387,7 @@ return static function() {
                                         );
                                 },
                             ))
-                            ->terminate();
+                            ->finish();
                     },
                 );
             // since the license file is shorter it finishes first even though
@@ -439,7 +439,7 @@ return static function() {
                                     $order[] = 'second';
                                 },
                             ))
-                            ->terminate();
+                            ->finish();
                     },
                 );
 
@@ -493,7 +493,7 @@ return static function() {
                                             ->unwrap(),
                                     ),
                                 )
-                                ->terminate(),
+                                ->finish(),
                         );
                 })
                 ->inLessThan()
@@ -547,7 +547,7 @@ return static function() {
                                 ->halt(Period::second(1))
                                 ->unwrap();
 
-                            return $continuation->abort();
+                            return $continuation->terminate();
                         },
                     );
             });

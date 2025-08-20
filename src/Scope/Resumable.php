@@ -40,10 +40,10 @@ final class Resumable
     }
 
     /**
-     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Aborted<C>|Terminated<C>
+     * @return Suspended<C>|Restartable<C>|Wakeable<C>|Terminated<C>|Finished<C>
      */
     #[\NoDiscard]
-    public function next(): Suspended|Restartable|Wakeable|Aborted|Terminated
+    public function next(): Suspended|Restartable|Wakeable|Terminated|Finished
     {
         $return = Suspension::of($this->fiber->resume(
             $this->resumption->unwrap(),
@@ -63,8 +63,8 @@ final class Resumable
         return $continuation->match(
             Restartable::of($this->scope),
             Wakeable::of($this->scope),
-            Aborted::of(...),
             Terminated::of(...),
+            Finished::of(...),
         );
     }
 }
