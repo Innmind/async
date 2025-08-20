@@ -22,23 +22,31 @@ use Innmind\Immutable\{
 final class Tasks
 {
     /**
+     * @param ?int<2, max> $concurrencyLimit
      * @param Sequence<Task\Suspended> $suspended
      * @param Sequence<Task\Resumable> $resumable
+     * @param Sequence<callable(OperatingSystem)> $unscheduled
      */
     private function __construct(
         private Config $config,
+        private ?int $concurrencyLimit,
         private Sequence $suspended,
         private Sequence $resumable,
+        private Sequence $unscheduled,
     ) {
     }
 
     /**
      * @psalm-pure
+     *
+     * @param ?int<2, max> $concurrencyLimit
      */
-    public static function none(Config $config): self
+    public static function none(Config $config, ?int $concurrencyLimit): self
     {
         return new self(
             $config,
+            $concurrencyLimit,
+            Sequence::of(),
             Sequence::of(),
             Sequence::of(),
         );
@@ -46,7 +54,9 @@ final class Tasks
 
     public function empty(): bool
     {
-        return $this->suspended->empty() && $this->resumable->empty();
+        return $this->suspended->empty() &&
+            $this->resumable->empty() &&
+            $this->unscheduled->empty();
     }
 
     /**
@@ -67,6 +77,7 @@ final class Tasks
         // The end result is the same but this way it should have the lowest
         // memory footprint.
         // Suspended tasks can only be advanced in the wait
+        [$new, $unscheduled] = $this->throttle($new);
         $tasks = $this
             ->resumable
             ->map(static fn($task) => $task->next())
@@ -83,10 +94,12 @@ final class Tasks
         return [
             new self(
                 $this->config,
+                $this->concurrencyLimit,
                 $this->suspended->append(
                     $tasks->keep(Instance::of(Task\Suspended::class)),
                 ),
                 $tasks->keep(Instance::of(Task\Resumable::class)),
+                $unscheduled,
             ),
             $results,
         ];
@@ -115,10 +128,43 @@ final class Tasks
 
         return new self(
             $this->config,
+            $this->concurrencyLimit,
             $tasks->keep(Instance::of(Task\Suspended::class)),
             $this->resumable->append(
                 $tasks->keep(Instance::of(Task\Resumable::class)),
             ),
+            $this->unscheduled,
         );
+    }
+
+    /**
+     * @param Sequence<callable(OperatingSystem)> $new
+     * @return array{
+     *     Sequence<callable(OperatingSystem)>,
+     *     Sequence<callable(OperatingSystem)>,
+     * }
+     */
+    private function throttle(Sequence $new): array
+    {
+        if (\is_null($this->concurrencyLimit)) {
+            return [$new, Sequence::of()];
+        }
+
+        $active = $this->suspended->size() + $this->resumable->size();
+        $allowed = $this->concurrencyLimit - $active;
+
+        if ($allowed < 1) {
+            return [
+                Sequence::of(),
+                $this->unscheduled->append($new),
+            ];
+        }
+
+        $tasks = $this->unscheduled->append($new);
+
+        return [
+            $tasks->take($allowed),
+            $tasks->drop($allowed),
+        ];
     }
 }

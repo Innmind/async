@@ -33,6 +33,7 @@ final class State
      * @template A
      *
      * @param Scope\Uninitialized<A>|Scope\Suspended<A>|Scope\Resumable<A>|Scope\Restartable<A>|Scope\Wakeable<A>|Scope\Terminated<A> $scope
+     * @param ?int<2, max> $concurrencyLimit
      *
      * @return self<A>
      */
@@ -40,10 +41,11 @@ final class State
     public static function new(
         Scope\Uninitialized|Scope\Suspended|Scope\Resumable|Scope\Restartable|Scope\Wakeable|Scope\Terminated $scope,
         Config $config,
+        ?int $concurrencyLimit,
     ): self {
         return new self(
             $scope,
-            Tasks::none($config),
+            Tasks::none($config, $concurrencyLimit),
             Sequence::of(),
             $config,
         );

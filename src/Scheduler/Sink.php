@@ -20,10 +20,12 @@ final class Sink
     /**
      * @psalm-mutation-free
      *
+     * @param ?int<2, max> $concurrencyLimit
      * @param C $carry
      */
     private function __construct(
         private OperatingSystem $sync,
+        private ?int $concurrencyLimit,
         private mixed $carry,
     ) {
     }
@@ -33,6 +35,7 @@ final class Sink
      * @psalm-pure
      * @template A
      *
+     * @param ?int<2, max> $concurrencyLimit
      * @param A $carry
      *
      * @return self<A>
@@ -40,9 +43,10 @@ final class Sink
     #[\NoDiscard]
     public static function of(
         OperatingSystem $sync,
+        ?int $concurrencyLimit,
         mixed $carry,
     ): self {
-        return new self($sync, $carry);
+        return new self($sync, $concurrencyLimit, $carry);
     }
 
     /**
@@ -58,6 +62,7 @@ final class Sink
                 $this->carry,
             ),
             Config::of($this->sync->clock()),
+            $this->concurrencyLimit,
         );
 
         do {
