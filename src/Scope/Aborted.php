@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace Innmind\Async\Scope;
 
 /**
- * Scope call was aborted, and all tasks should be aborted as well
+ * Scope asked to abort all tasks and will wait for them to finish
  *
  * @internal
  * @psalm-immutable
