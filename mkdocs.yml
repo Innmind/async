@@ -11,7 +11,7 @@ nav:
     - Create a scope: getting-started/scope.md
     - Create a task: getting-started/task.md
   - Scheduler:
-    - scheduler/index.md
+    - scheduler/config.md
   - Scopes:
     - scopes/lifecycle.md
     - Strategies:
