@@ -466,7 +466,7 @@ return static function() {
                         ->wakeOnResult(),
                 );
 
-            $assert->count(0, $results);
+            $assert->same(0, $results->size());
         },
     );
 

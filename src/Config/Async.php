@@ -9,7 +9,7 @@ use Innmind\TimeContinuum\{
     Clock,
     Period,
 };
-use Innmind\HttpTransport\Curl;
+use Innmind\HttpTransport\Transport;
 use Innmind\TimeWarp\Halt;
 use Innmind\IO\IO;
 
@@ -29,19 +29,16 @@ final class Async
 
     public function __invoke(Config $config): Config
     {
-        $halt = Halt\Async::of($this->clock);
+        $halt = Halt::async($this->clock);
         $io = IO::async($this->clock);
-        // todo handle max concurrency + ssl configuration
         // todo build a native client based on innmind/io to better integrate in
         // this system.
-        $http = Curl::of(
+        $http = Transport::async(
             $this->clock,
             $io,
-        )
-            ->heartbeat(
-                Period::millisecond(10), // this is blocking the active task so it needs to be low
-                static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
-            );
+            Period::millisecond(10), // this is blocking the active task so it needs to be low
+            static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
+        );
         $signals = $config
             ->signalsHandler()
             ->async($this->interceptor);
