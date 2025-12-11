@@ -12,6 +12,7 @@ use Innmind\TimeContinuum\{
 use Innmind\HttpTransport\Transport;
 use Innmind\TimeWarp\Halt;
 use Innmind\IO\IO;
+use Innmind\Signals\Handler;
 
 /**
  * @internal
@@ -30,7 +31,10 @@ final class Async
     public function __invoke(Config $config): Config
     {
         $halt = Halt::async($this->clock);
-        $io = IO::async($this->clock);
+        $io = IO::async(
+            $config->io(),
+            $this->clock,
+        );
         // todo build a native client based on innmind/io to better integrate in
         // this system.
         $http = Transport::async(
@@ -39,9 +43,10 @@ final class Async
             Period::millisecond(10), // this is blocking the active task so it needs to be low
             static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
         );
-        $signals = $config
-            ->signalsHandler()
-            ->async($this->interceptor);
+        $signals = Handler::async(
+            $config->signalsHandler(),
+            $this->interceptor,
+        );
 
         return $config
             ->haltProcessVia($halt)
