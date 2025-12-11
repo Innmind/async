@@ -111,23 +111,23 @@ return static function() {
                             [false, 0] => $continuation
                                 ->schedule(Sequence::of(
                                     static function($os) {
-                                        $os->process()->halt(Period::second(1))->unwrap();
-                                        $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
                                     },
                                     static function($os) {
-                                        $os->process()->halt(Period::second(1))->unwrap();
-                                        $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
                                     },
                                     static function($os) {
-                                        $os->process()->halt(Period::second(1))->unwrap();
-                                        $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
                                     },
                                 ))
                                 ->carryWith(true),
                             [true, 0] => (static function($os, $continuation) {
                                 // this halt is executed at the same time at the
                                 // second one in each task
-                                $os->process()->halt(Period::second(1))->unwrap();
+                                $_ = $os->process()->halt(Period::second(1))->unwrap();
 
                                 return $continuation;
                             })($os, $continuation),
@@ -154,7 +154,7 @@ return static function() {
                     ->with(
                         static function($started, $os, $continuation) use ($assert, &$results) {
                             if ($started) {
-                                $os
+                                $_ = $os
                                     ->process()
                                     ->halt(Period::second(2))
                                     ->unwrap();
@@ -170,14 +170,14 @@ return static function() {
                                         // This task halts for 4 seconds because
                                         // if less then it may sometime finish
                                         // before the scope. (as 3-1 ~= 2s)
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(4))
                                             ->unwrap();
                                         $results[] = 'task 1';
                                     },
                                     static function($os) use (&$results) {
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(1))
                                             ->unwrap();
@@ -210,11 +210,11 @@ return static function() {
                     ->with(
                         static function($started, $os, $continuation) use ($assert, &$results) {
                             if ($started) {
-                                $os
+                                $_ = $os
                                     ->process()
                                     ->halt(Period::second(3))
                                     ->unwrap();
-                                $os
+                                $_ = $os
                                     ->process()
                                     ->halt(Period::second(1))
                                     ->unwrap();
@@ -227,14 +227,14 @@ return static function() {
                                 ->carryWith(true)
                                 ->schedule(Sequence::of(
                                     static function($os) use (&$results) {
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(2))
                                             ->unwrap();
                                         $results[] = 'task 1';
                                     },
                                     static function($os) use (&$results) {
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(1))
                                             ->unwrap();
@@ -411,7 +411,7 @@ return static function() {
                         return $continuation
                             ->schedule(Sequence::of(
                                 static function($os) use ($assert, &$order) {
-                                    $os
+                                    $_ = $os
                                         ->remote()
                                         ->http()(Request::of(
                                             Url::of('https://httpbun.org/delay/2'),
@@ -425,7 +425,7 @@ return static function() {
                                     $order[] = 'first';
                                 },
                                 static function($os) use ($assert, &$order) {
-                                    $os
+                                    $_ = $os
                                         ->remote()
                                         ->http()(Request::of(
                                             Url::of('https://httpbun.org/delay/1'),
@@ -533,7 +533,7 @@ return static function() {
                                                 );
 
                                             while ($continue) {
-                                                $os
+                                                $_ = $os
                                                     ->process()
                                                     ->halt(Period::second(2))
                                                     ->unwrap();
@@ -542,7 +542,7 @@ return static function() {
                                     ));
                             }
 
-                            $os
+                            $_ = $os
                                 ->process()
                                 ->halt(Period::second(1))
                                 ->unwrap();
