@@ -109,7 +109,7 @@ final class Continuation
      * @return self<C>
      */
     #[\NoDiscard]
-    public function wakeOnResult(): self
+    public function wake(): self
     {
         return new self(
             Next::wake,
