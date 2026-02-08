@@ -97,7 +97,7 @@ return static function() {
                             default => Sequence::of(),
                         })
                         ->carryWith($all->append($continuation->results()))
-                        ->wakeOnResult(),
+                        ->wake(),
                 );
             $assert->same([$value], $values->toList());
         },
@@ -466,7 +466,7 @@ return static function() {
                             static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
                         )->map(Task\Discard::result(...)))
                         ->carryWith($all->append($continuation->results()))
-                        ->wakeOnResult(),
+                        ->wake(),
                 );
 
             $assert->same(0, $results->size());
