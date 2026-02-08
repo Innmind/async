@@ -51,8 +51,10 @@ final class Uninitialized
         $return = Suspension::of($fiber->start(
             $this->carry,
             $async,
-            Continuation::new($this->carry),
-            Sequence::of(), // no results
+            Continuation::new(
+                $this->carry,
+                Sequence::of(), // no results
+            ),
         ));
 
         if ($return instanceof Suspension) {

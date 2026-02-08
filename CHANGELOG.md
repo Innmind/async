@@ -7,3 +7,4 @@
 - Requires PHP `8.4`
 - Requires `innmind/operating-system:~7.0`
 - Requires `innmind/time:~1.0`
+- Tasks results are now accessible via `Continuation::results()` instead of scope's fourth argument

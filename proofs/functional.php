@@ -91,12 +91,12 @@ return static function() {
             $values = Scheduler::of(Factory::build())
                 ->sink(Sequence::of())
                 ->with(
-                    static fn($all, $__, $continuation, $results) => $continuation
-                        ->schedule(match ([$all->size(), $results->size()]) {
+                    static fn($all, $__, $continuation) => $continuation
+                        ->schedule(match ([$all->size(), $continuation->results()->size()]) {
                             [0, 0] => Sequence::of(static fn() => $value),
                             default => Sequence::of(),
                         })
-                        ->carryWith($all->append($results))
+                        ->carryWith($all->append($continuation->results()))
                         ->wakeOnResult(),
                 );
             $assert->same([$value], $values->toList());
@@ -110,7 +110,7 @@ return static function() {
                 Scheduler::of(Factory::build())
                     ->sink(false)
                     ->with(
-                        static fn($started, $os, $continuation, $results) => match ([$started, $results->size()]) {
+                        static fn($started, $os, $continuation) => match ([$started, $continuation->results()->size()]) {
                             [false, 0] => $continuation
                                 ->schedule(Sequence::of(
                                     static function($os) {
@@ -459,13 +459,13 @@ return static function() {
             $results = Scheduler::of(Factory::build())
                 ->sink(Sequence::of())
                 ->with(
-                    static fn($all, $__, $continuation, $results) => $continuation
+                    static fn($all, $__, $continuation) => $continuation
                         ->schedule(Sequence::of(
                             static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
                             static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
                             static fn($os) => $os->process()->halt(Period::second(1))->unwrap(),
                         )->map(Task\Discard::result(...)))
-                        ->carryWith($all->append($results))
+                        ->carryWith($all->append($continuation->results()))
                         ->wakeOnResult(),
                 );
 

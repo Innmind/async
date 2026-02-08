@@ -62,8 +62,10 @@ final class Wakeable
         $return = Suspension::of($fiber->start(
             $this->carry,
             $async,
-            Continuation::new($this->carry),
-            $results,
+            Continuation::new(
+                $this->carry,
+                $results,
+            ),
         ));
 
         if ($return instanceof Suspension) {

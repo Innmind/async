@@ -10,7 +10,6 @@ use Innmind\Async\{
     Config,
 };
 use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\Immutable\Sequence;
 
 /**
  * @template C
@@ -50,7 +49,7 @@ final class Sink
     }
 
     /**
-     * @param callable(C, OperatingSystem, Continuation<C>, Sequence<mixed>): Continuation<C> $scope
+     * @param callable(C, OperatingSystem, Continuation<C>): Continuation<C> $scope
      *
      * @return C
      */
