@@ -5,7 +5,6 @@ namespace Innmind\Async;
 
 use Innmind\Async\Scope\Continuation;
 use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\Immutable\Sequence;
 
 /**
  * @internal
@@ -24,7 +23,7 @@ final class Scope
      * @psalm-pure
      * @template C
      *
-     * @param callable(C, OperatingSystem, Continuation<C>, Sequence<mixed>): Continuation<C> $scope
+     * @param callable(C, OperatingSystem, Continuation<C>): Continuation<C> $scope
      *
      * @return Scope\Uninitialized<C>
      */

@@ -16,11 +16,13 @@ final class Continuation
     /**
      * @param Sequence<callable(OperatingSystem)> $tasks
      * @param C $carry
+     * @param Sequence<mixed> $results
      */
     private function __construct(
         private Next $next,
         private Sequence $tasks,
         private mixed $carry,
+        private Sequence $results,
     ) {
     }
 
@@ -30,16 +32,18 @@ final class Continuation
      * @internal
      *
      * @param A $carry
+     * @param Sequence<mixed> $results
      *
      * @return self<A>
      */
     #[\NoDiscard]
-    public static function new(mixed $carry): self
+    public static function new(mixed $carry, Sequence $results): self
     {
         return new self(
             Next::restart,
             Sequence::of(),
             $carry,
+            $results,
         );
     }
 
@@ -55,6 +59,7 @@ final class Continuation
             $this->next,
             $this->tasks,
             $carry,
+            $this->results,
         );
     }
 
@@ -74,7 +79,16 @@ final class Continuation
                 ->prepend($this->tasks)
                 ->snap(),
             $this->carry,
+            $this->results,
         );
+    }
+
+    /**
+     * @return Sequence<mixed>
+     */
+    public function results(): Sequence
+    {
+        return $this->results;
     }
 
     /**
@@ -87,6 +101,7 @@ final class Continuation
             Next::finish,
             $this->tasks,
             $this->carry,
+            $this->results,
         );
     }
 
@@ -100,6 +115,7 @@ final class Continuation
             Next::wake,
             $this->tasks,
             $this->carry,
+            $this->results,
         );
     }
 
@@ -116,6 +132,7 @@ final class Continuation
             Next::terminate,
             $this->tasks->clear(),
             $this->carry,
+            $this->results,
         );
     }
 
