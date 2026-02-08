@@ -417,7 +417,7 @@ return static function() {
                                     $_ = $os
                                         ->remote()
                                         ->http()(Request::of(
-                                            Url::of('https://httpbun.org/delay/2'),
+                                            Url::of('https://httpbun.org/delay/5'),
                                             Method::get,
                                             ProtocolVersion::v11,
                                         ))
