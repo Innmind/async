@@ -5,7 +5,10 @@ use Innmind\Async\{
     Scheduler,
     Task,
 };
-use Innmind\OperatingSystem\Factory;
+use Innmind\OperatingSystem\{
+    Factory,
+    Config\Resilient,
+};
 use Innmind\Signals\Signal;
 use Innmind\Time\Period;
 use Innmind\Filesystem\Name;
@@ -404,7 +407,7 @@ return static function() {
         'HTTP requests are handled asynchronously',
         static function($assert) {
             $order = [];
-            Scheduler::of(Factory::build())
+            Scheduler::of(Factory::build()->map(Resilient::new()))
                 ->sink(null)
                 ->with(
                     static function($_, $__, $continuation) use ($assert, &$order) {
