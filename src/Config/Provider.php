@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace Innmind\Async\Config;
 
 use Innmind\Signals\Async\Interceptor;
-use Innmind\TimeContinuum\Clock;
+use Innmind\Time\Clock;
 
 /**
  * @internal

@@ -5,9 +5,12 @@ use Innmind\Async\{
     Scheduler,
     Task,
 };
-use Innmind\OperatingSystem\Factory;
+use Innmind\OperatingSystem\{
+    Factory,
+    Config\Resilient,
+};
 use Innmind\Signals\Signal;
-use Innmind\TimeContinuum\Period;
+use Innmind\Time\Period;
 use Innmind\Filesystem\Name;
 use Innmind\Http\{
     Request,
@@ -111,23 +114,23 @@ return static function() {
                             [false, 0] => $continuation
                                 ->schedule(Sequence::of(
                                     static function($os) {
-                                        $os->process()->halt(Period::second(1))->unwrap();
-                                        $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
                                     },
                                     static function($os) {
-                                        $os->process()->halt(Period::second(1))->unwrap();
-                                        $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
                                     },
                                     static function($os) {
-                                        $os->process()->halt(Period::second(1))->unwrap();
-                                        $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
+                                        $_ = $os->process()->halt(Period::second(1))->unwrap();
                                     },
                                 ))
                                 ->carryWith(true),
                             [true, 0] => (static function($os, $continuation) {
                                 // this halt is executed at the same time at the
                                 // second one in each task
-                                $os->process()->halt(Period::second(1))->unwrap();
+                                $_ = $os->process()->halt(Period::second(1))->unwrap();
 
                                 return $continuation;
                             })($os, $continuation),
@@ -154,7 +157,7 @@ return static function() {
                     ->with(
                         static function($started, $os, $continuation) use ($assert, &$results) {
                             if ($started) {
-                                $os
+                                $_ = $os
                                     ->process()
                                     ->halt(Period::second(2))
                                     ->unwrap();
@@ -170,14 +173,14 @@ return static function() {
                                         // This task halts for 4 seconds because
                                         // if less then it may sometime finish
                                         // before the scope. (as 3-1 ~= 2s)
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(4))
                                             ->unwrap();
                                         $results[] = 'task 1';
                                     },
                                     static function($os) use (&$results) {
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(1))
                                             ->unwrap();
@@ -210,11 +213,11 @@ return static function() {
                     ->with(
                         static function($started, $os, $continuation) use ($assert, &$results) {
                             if ($started) {
-                                $os
+                                $_ = $os
                                     ->process()
                                     ->halt(Period::second(3))
                                     ->unwrap();
-                                $os
+                                $_ = $os
                                     ->process()
                                     ->halt(Period::second(1))
                                     ->unwrap();
@@ -227,14 +230,14 @@ return static function() {
                                 ->carryWith(true)
                                 ->schedule(Sequence::of(
                                     static function($os) use (&$results) {
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(2))
                                             ->unwrap();
                                         $results[] = 'task 1';
                                     },
                                     static function($os) use (&$results) {
-                                        $os
+                                        $_ = $os
                                             ->process()
                                             ->halt(Period::second(1))
                                             ->unwrap();
@@ -404,17 +407,17 @@ return static function() {
         'HTTP requests are handled asynchronously',
         static function($assert) {
             $order = [];
-            Scheduler::of(Factory::build())
+            Scheduler::of(Factory::build()->map(Resilient::new()))
                 ->sink(null)
                 ->with(
                     static function($_, $__, $continuation) use ($assert, &$order) {
                         return $continuation
                             ->schedule(Sequence::of(
                                 static function($os) use ($assert, &$order) {
-                                    $os
+                                    $_ = $os
                                         ->remote()
                                         ->http()(Request::of(
-                                            Url::of('https://httpbun.org/delay/2'),
+                                            Url::of('https://httpbin.org/delay/5'),
                                             Method::get,
                                             ProtocolVersion::v11,
                                         ))
@@ -425,10 +428,10 @@ return static function() {
                                     $order[] = 'first';
                                 },
                                 static function($os) use ($assert, &$order) {
-                                    $os
+                                    $_ = $os
                                         ->remote()
                                         ->http()(Request::of(
-                                            Url::of('https://httpbun.org/delay/1'),
+                                            Url::of('https://httpbin.org/delay/1'),
                                             Method::get,
                                             ProtocolVersion::v11,
                                         ))
@@ -466,7 +469,7 @@ return static function() {
                         ->wakeOnResult(),
                 );
 
-            $assert->count(0, $results);
+            $assert->same(0, $results->size());
         },
     );
 
@@ -522,7 +525,7 @@ return static function() {
                                         10,
                                         static function($os) {
                                             $continue = true;
-                                            $os
+                                            $_ = $os
                                                 ->process()
                                                 ->signals()
                                                 ->listen(
@@ -530,10 +533,11 @@ return static function() {
                                                     static function() use (&$continue) {
                                                         $continue = false;
                                                     },
-                                                );
+                                                )
+                                                ->unwrap();
 
                                             while ($continue) {
-                                                $os
+                                                $_ = $os
                                                     ->process()
                                                     ->halt(Period::second(2))
                                                     ->unwrap();
@@ -542,7 +546,7 @@ return static function() {
                                     ));
                             }
 
-                            $os
+                            $_ = $os
                                 ->process()
                                 ->halt(Period::second(1))
                                 ->unwrap();

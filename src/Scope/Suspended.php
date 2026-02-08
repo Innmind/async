@@ -8,7 +8,7 @@ use Innmind\Async\{
     Suspension,
     Wait,
 };
-use Innmind\TimeContinuum\Clock;
+use Innmind\Time\Clock;
 
 /**
  * Waiting for IO to be ready or halt to be finished

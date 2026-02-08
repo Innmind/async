@@ -11,7 +11,7 @@ use Innmind\Signals\{
     Async\Interceptor,
     Signal,
 };
-use Innmind\TimeContinuum\Clock;
+use Innmind\Time\Clock;
 
 /**
  * Waiting for IO to be ready or halt to be finished
