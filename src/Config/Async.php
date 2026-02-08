@@ -5,12 +5,12 @@ namespace Innmind\Async\Config;
 
 use Innmind\OperatingSystem\Config;
 use Innmind\Signals\Async\Interceptor;
-use Innmind\TimeContinuum\{
+use Innmind\Time\{
     Clock,
     Period,
+    Halt,
 };
 use Innmind\HttpTransport\Transport;
-use Innmind\TimeWarp\Halt;
 use Innmind\IO\IO;
 use Innmind\Signals\Handler;
 

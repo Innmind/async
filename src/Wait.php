@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace Innmind\Async;
 
 use Innmind\OperatingSystem\OperatingSystem;
-use Innmind\TimeContinuum\Period;
+use Innmind\Time\Period;
 use Innmind\IO\Internal\Watch;
 
 /**

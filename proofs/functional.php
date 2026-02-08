@@ -7,7 +7,7 @@ use Innmind\Async\{
 };
 use Innmind\OperatingSystem\Factory;
 use Innmind\Signals\Signal;
-use Innmind\TimeContinuum\Period;
+use Innmind\Time\Period;
 use Innmind\Filesystem\Name;
 use Innmind\Http\{
     Request,
@@ -522,7 +522,7 @@ return static function() {
                                         10,
                                         static function($os) {
                                             $continue = true;
-                                            $os
+                                            $_ = $os
                                                 ->process()
                                                 ->signals()
                                                 ->listen(
@@ -530,7 +530,8 @@ return static function() {
                                                     static function() use (&$continue) {
                                                         $continue = false;
                                                     },
-                                                );
+                                                )
+                                                ->unwrap();
 
                                             while ($continue) {
                                                 $_ = $os

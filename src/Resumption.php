@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
-use Innmind\TimeWarp\Async\Resumable as Halt;
+use Innmind\Time\Halt\Async\Resumable as Halt;
 use Innmind\IO\Internal\Async\Resumable as IO;
 
 /**

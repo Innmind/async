@@ -3,11 +3,11 @@ declare(strict_types = 1);
 
 namespace Innmind\Async;
 
-use Innmind\TimeContinuum\{
+use Innmind\Time\{
     Clock,
     Period,
+    Halt\Async\Suspended as Halt,
 };
-use Innmind\TimeWarp\Async\Suspended as Halt;
 use Innmind\IO\Internal\{
     Async\Suspended as IO,
     Watch,
