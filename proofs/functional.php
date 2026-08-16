@@ -22,7 +22,10 @@ use Innmind\Url\{
     Path,
 };
 use Innmind\Immutable\Sequence;
-use Innmind\BlackBox\Set;
+use Innmind\BlackBox\{
+    Set,
+    Tag,
+};
 
 return static function() {
     yield test(
@@ -48,7 +51,7 @@ return static function() {
                 ->inMoreThan()
                 ->seconds(1);
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield proof(
         'Carry value via the scope',
@@ -80,7 +83,7 @@ return static function() {
                 );
             $assert->same($modified, $returned);
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield proof(
         'Retrieve the tasks results',
@@ -101,7 +104,7 @@ return static function() {
                 );
             $assert->same([$value], $values->toList());
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'The scope is run asynchronously',
@@ -145,7 +148,7 @@ return static function() {
                 ->inMoreThan()
                 ->seconds(2);
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'The scope and tasks are run asynchronously',
@@ -201,7 +204,7 @@ return static function() {
                 ->inMoreThan()
                 ->seconds(2);
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'The scope and tasks are run asynchronously in different order',
@@ -258,7 +261,7 @@ return static function() {
                 ->inMoreThan()
                 ->seconds(2);
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'Streams read by lines are handled asynchronously',
@@ -337,7 +340,7 @@ return static function() {
                 $lines,
             );
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'Streams read by chunks are handled asynchronously',
@@ -401,7 +404,7 @@ return static function() {
                 $chunks,
             );
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'HTTP requests are handled asynchronously',
@@ -451,7 +454,7 @@ return static function() {
                 $order,
             );
         },
-    );
+    )->tag(Tag::local);
 
     yield test(
         'Discard results',
@@ -471,7 +474,7 @@ return static function() {
 
             $assert->same(0, $results->size());
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield proof(
         'Limit concurrency',
@@ -505,7 +508,7 @@ return static function() {
                     ((int) \ceil($tasks / $max)) + 1,
                 );
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 
     yield test(
         'Abort tasks',
@@ -562,5 +565,5 @@ return static function() {
                 ->inMoreThan()
                 ->seconds(1);
         },
-    );
+    )->tag(Tag::local, Tag::ci);
 };
