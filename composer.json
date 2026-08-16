@@ -2,7 +2,9 @@
     "name": "innmind/async",
     "type": "library",
     "description": "Async orchestration",
-    "keywords": ["async"],
+    "keywords": [
+        "async"
+    ],
     "homepage": "http://github.com/innmind/async",
     "license": "MIT",
     "authors": [
