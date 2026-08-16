@@ -17,7 +17,7 @@
         "issues": "http://github.com/innmind/async/issues"
     },
     "require": {
-        "php": "~8.4",
+        "php": "~8.5",
         "innmind/operating-system": "~7.0",
         "innmind/immutable": "~6.0",
         "innmind/io": "~4.0",
