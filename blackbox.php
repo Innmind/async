@@ -10,18 +10,17 @@ use Innmind\BlackBox\{
 };
 
 Application::new($argv)
-    ->when(
-        \getenv('ENABLE_COVERAGE') !== false,
-        static fn(Application $app) => $app 
-            ->scenariiPerProof(1)
+    ->map(static fn($app) => match (\getenv('BLACKBOX_ENV')) {
+        'coverage' => $app
             ->codeCoverage(
                 CodeCoverage::of(
                     __DIR__.'/src/',
                     __DIR__.'/proofs/',
                 )
-                    ->dumpTo('coverage.clover')
-                    ->enableWhen(true),
-            ),
-    )
+                    ->dumpTo('coverage.clover'),
+            )
+            ->scenariiPerProof(1),
+        default => $app,
+    })
     ->tryToProve(Load::everythingIn(__DIR__.'/proofs/'))
     ->exit();
