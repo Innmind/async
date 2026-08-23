@@ -5,10 +5,7 @@ namespace Innmind\Async\Config;
 
 use Innmind\OperatingSystem\Config;
 use Innmind\Signals\Async\Interceptor;
-use Innmind\Time\{
-    Clock,
-    Halt,
-};
+use Innmind\Time\Clock;
 
 /**
  * @internal
