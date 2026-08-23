@@ -1,5 +1,11 @@
 # Changelog
 
+### Changed
+
+- Requires `innmind/operating-system:~7.3`
+- Requires `innmind/io:~4.2`
+- Requires `innmind/signals:~5.2`
+
 ## 2.1.0 - 2026-08-16
 
 ### Changed
