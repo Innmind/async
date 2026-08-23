@@ -2,7 +2,7 @@
 
 ### Changed
 
-- Requires `innmind/http-transport:~9.3`
+- Requires `innmind/operating-system:~7.3`
 - Requires `innmind/io:~4.2`
 - Requires `innmind/signals:~5.2`
 

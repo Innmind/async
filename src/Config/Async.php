@@ -26,16 +26,9 @@ final class Async
 
     public function __invoke(Config $config): Config
     {
-        // todo add $config->mapIO()
-        $io = $config->io()->asAsync($this->clock);
-        // todo add $config->mapSignals()
-        $signals = $config->signalsHandler()->asAsync(
-            $this->interceptor,
-        );
-
         return $config
-            ->withIO($io)
-            ->mapHalt(fn() => Halt::async($this->clock))
+            ->mapIO(fn($io) => $io->asAsync($this->clock))
+            ->mapHalt(fn($halt) => $halt->asAsync($this->clock))
             ->mapHttpTransport(fn($transport, $config) => $transport->map(
                 fn($http) => $http->asAsync(
                     $this->clock,
@@ -43,7 +36,7 @@ final class Async
                     $config->io(),
                 ),
             ))
-            ->handleSignalsVia($signals);
+            ->mapSignalsHandler(fn($signals) => $signals->asAsync($this->interceptor));
     }
 
     /**
