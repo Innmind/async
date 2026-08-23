@@ -1,5 +1,7 @@
 # Changelog
 
+## 2.2.0 - 2026-08-23
+
 ### Changed
 
 - Requires `innmind/operating-system:~7.3`
