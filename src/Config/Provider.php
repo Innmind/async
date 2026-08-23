@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace Innmind\Async\Config;
 
 use Innmind\Signals\Async\Interceptor;
-use Innmind\Time\Clock;
 
 /**
  * @internal
@@ -13,20 +12,19 @@ use Innmind\Time\Clock;
 final class Provider
 {
     private function __construct(
-        private Clock $clock,
     ) {
     }
 
     public function __invoke(?Interceptor $interceptor = null): Async
     {
-        return Async::of($this->clock, $interceptor);
+        return Async::of($interceptor);
     }
 
     /**
      * @psalm-pure
      */
-    public static function of(Clock $clock): self
+    public static function new(): self
     {
-        return new self($clock);
+        return new self;
     }
 }
