@@ -21,6 +21,8 @@ final class Async
 
     public function __invoke(Config $config): Config
     {
+        $interceptor = $this->interceptor;
+
         return $config
             ->mapIO(static fn($io, $config) => $io->asAsync($config->clock()))
             ->mapHalt(static fn($halt, $config) => $halt->asAsync($config->clock()))
@@ -31,7 +33,7 @@ final class Async
                     $config->io(),
                 ),
             ))
-            ->mapSignalsHandler(fn($signals) => $signals->asAsync($this->interceptor));
+            ->mapSignalsHandler(static fn($signals) => $signals->asAsync($interceptor));
     }
 
     /**
