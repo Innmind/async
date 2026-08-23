@@ -5,7 +5,6 @@ namespace Innmind\Async\Config;
 
 use Innmind\OperatingSystem\Config;
 use Innmind\Signals\Async\Interceptor;
-use Innmind\Time\Clock;
 
 /**
  * @internal
@@ -16,7 +15,6 @@ final class Async
      * @psalm-mutation-free
      */
     private function __construct(
-        private Clock $clock,
         private ?Interceptor $interceptor,
     ) {
     }
@@ -24,11 +22,11 @@ final class Async
     public function __invoke(Config $config): Config
     {
         return $config
-            ->mapIO(fn($io) => $io->asAsync($this->clock))
-            ->mapHalt(fn($halt) => $halt->asAsync($this->clock))
-            ->mapHttpTransport(fn($transport, $config) => $transport->map(
-                fn($http) => $http->asAsync(
-                    $this->clock,
+            ->mapIO(static fn($io, $config) => $io->asAsync($config->clock()))
+            ->mapHalt(static fn($halt, $config) => $halt->asAsync($config->clock()))
+            ->mapHttpTransport(static fn($transport, $config) => $transport->map(
+                static fn($http) => $http->asAsync(
+                    $config->clock(),
                     $config->halt(),
                     $config->io(),
                 ),
@@ -39,8 +37,8 @@ final class Async
     /**
      * @psalm-pure
      */
-    public static function of(Clock $clock, ?Interceptor $interceptor): self
+    public static function of(?Interceptor $interceptor): self
     {
-        return new self($clock, $interceptor);
+        return new self($interceptor);
     }
 }

@@ -60,7 +60,7 @@ final class Sink
                 $scope,
                 $this->carry,
             ),
-            Config\Provider::of($this->sync->clock()),
+            Config\Provider::new(),
             $this->concurrencyLimit,
         );
 
