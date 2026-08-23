@@ -7,12 +7,8 @@ use Innmind\OperatingSystem\Config;
 use Innmind\Signals\Async\Interceptor;
 use Innmind\Time\{
     Clock,
-    Period,
     Halt,
 };
-use Innmind\HttpTransport\Transport;
-use Innmind\IO\IO;
-use Innmind\Signals\Handler;
 
 /**
  * @internal
@@ -30,28 +26,23 @@ final class Async
 
     public function __invoke(Config $config): Config
     {
-        $halt = Halt::async($this->clock);
-        $io = IO::async(
-            $config->io(),
-            $this->clock,
-        );
-        // todo build a native client based on innmind/io to better integrate in
-        // this system.
-        $http = Transport::async(
-            $this->clock,
-            $io,
-            Period::millisecond(10), // this is blocking the active task so it needs to be low
-            static fn() => $halt(Period::millisecond(1))->unwrap(), // this allows to jump between tasks
-        );
-        $signals = Handler::async(
-            $config->signalsHandler(),
+        // todo add $config->mapIO()
+        $io = $config->io()->asAsync($this->clock);
+        // todo add $config->mapSignals()
+        $signals = $config->signalsHandler()->asAsync(
             $this->interceptor,
         );
 
         return $config
-            ->haltProcessVia($halt)
-            ->useHttpTransport($http)
             ->withIO($io)
+            ->mapHalt(fn() => Halt::async($this->clock))
+            ->mapHttpTransport(fn($transport, $config) => $transport->map(
+                fn($http) => $http->asAsync(
+                    $this->clock,
+                    $config->halt(),
+                    $config->io(),
+                ),
+            ))
             ->handleSignalsVia($signals);
     }
 
